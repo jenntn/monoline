@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "monoline",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-c", "import http.server, os; os.chdir('/Users/jtn/Downloads/monoline'); http.server.test(HandlerClass=http.server.SimpleHTTPRequestHandler, port=int(os.environ.get('PORT', 8090)), bind='')"],
+      "port": 8090,
+      "autoPort": true
+    }
+  ]
+}

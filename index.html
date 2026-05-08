@@ -1,0 +1,3293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
+<title>MONOLINE</title>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #111;
+    --white: #fff;
+    --gray-50: #fafafa;
+    --gray-100: #f5f5f5;
+    --gray-200: #e5e5e5;
+    --gray-300: #d4d4d4;
+    --gray-400: #a3a3a3;
+    --gray-500: #737373;
+    --gray-600: #525252;
+    --gray-800: #262626;
+    --border: 1.5px solid var(--black);
+    --border-light: 1px solid var(--gray-300);
+    --font: 'Space Grotesk', sans-serif;
+    --radius: 0px;
+
+    --tag-red: #ef4444;
+    --tag-orange: #f97316;
+    --tag-yellow: #eab308;
+    --tag-green: #22c55e;
+    --tag-blue: #3b82f6;
+    --tag-purple: #a855f7;
+    --tag-pink: #ec4899;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--white);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.4;
+    overflow-x: auto;
+    min-height: 100vh;
+  }
+
+  button, input, textarea, select {
+    font-family: var(--font);
+    font-size: 15px;
+    color: var(--black);
+    border: none;
+    background: none;
+    outline: none;
+  }
+
+  button { cursor: pointer; }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 100;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo {
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .board-selector {
+    position: relative;
+  }
+
+  .board-selector-toggle {
+    border: var(--border);
+    padding: 8px 12px;
+    background: var(--white);
+    font-weight: bold;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+  }
+
+  .board-selector-toggle:hover {
+    background: var(--gray-50);
+  }
+
+  .board-selector-toggle .arrow {
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+
+  .board-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 200px;
+    background: var(--white);
+    border: var(--border);
+    z-index: 200;
+    flex-direction: column;
+  }
+
+  .board-dropdown.open {
+    display: flex;
+  }
+
+  .board-dropdown-item {
+    padding: 10px 14px;
+    font-size: 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+    font-weight: normal;
+  }
+
+  .board-dropdown-item:hover {
+    background: var(--gray-100);
+  }
+
+  .board-dropdown-item.active {
+    font-weight: bold;
+  }
+
+  .board-dropdown-item:last-child {
+    border-bottom: none;
+  }
+
+  .board-dropdown-new {
+    padding: 10px 14px;
+    font-size: 14px;
+    text-align: left;
+    color: var(--gray-500);
+    border-top: var(--border);
+  }
+
+  .board-dropdown-new:hover {
+    background: var(--gray-100);
+    color: var(--black);
+  }
+
+  .btn {
+    border: var(--border);
+    padding: 8px 14px;
+    background: var(--white);
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .btn:hover {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 15px;
+  }
+
+  .btn-icon {
+    border: none;
+    padding: 8px;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .btn-icon:hover {
+    background: var(--gray-200);
+    color: var(--black);
+  }
+
+  .btn-danger:hover {
+    background: var(--tag-red);
+    color: var(--white);
+    border-color: var(--tag-red);
+  }
+
+  /* ── BOARD ── */
+  .board {
+    display: flex;
+    gap: 0;
+    padding: 0;
+    min-height: calc(100vh - 49px);
+    align-items: stretch;
+  }
+
+  /* ── COLUMN ── */
+  .column {
+    min-width: 280px;
+    max-width: 320px;
+    flex: 1;
+    border-right: var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+  }
+
+  .column.drag-over {
+    background: var(--gray-100);
+  }
+
+  .column-header {
+    padding: 10px 16px;
+    border-bottom: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 49px;
+    background: inherit;
+    z-index: 10;
+  }
+
+  .column-title {
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex: 1;
+  }
+
+  .column-title[contenteditable]:focus {
+    outline: 1px dashed var(--gray-400);
+    outline-offset: 2px;
+  }
+
+  .column-count {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-left: 8px;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  .column-actions {
+    display: flex;
+    gap: 2px;
+    margin-left: 8px;
+  }
+
+  .column-actions .btn-icon {
+    padding: 4px;
+    font-size: 16px;
+  }
+
+  .column-body {
+    flex: 1;
+    padding: 8px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 60px;
+  }
+
+  .column-body.drag-over-zone {
+    background: var(--gray-50);
+  }
+
+  /* ── CARD ── */
+  .card {
+    border: var(--border);
+    padding: 12px 14px;
+    background: var(--white);
+    cursor: grab;
+    position: relative;
+    transition: box-shadow 0.1s;
+  }
+
+  .card:hover {
+    box-shadow: 3px 3px 0 var(--black);
+  }
+
+  .card.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    word-break: break-word;
+  }
+
+  .card-notes-preview {
+    font-size: 15px;
+    color: var(--gray-500);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    margin-bottom: 4px;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .card-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 12px;
+    padding: 3px 8px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: var(--white);
+    border-radius: 0;
+  }
+
+  .card-indicators {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 15px;
+    color: var(--gray-500);
+  }
+
+  .card-indicators span {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .subtask-progress {
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+
+  .link-indicator {
+    font-size: 12px;
+    text-decoration: none;
+    color: var(--gray-500);
+    border: 1px solid var(--gray-300);
+    padding: 2px 6px;
+  }
+
+  .link-indicator:hover {
+    border-color: var(--black);
+    color: var(--black);
+  }
+
+  /* ── ADD COLUMN ── */
+  .add-column {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 8px;
+  }
+
+  .add-column .btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--gray-400);
+    border: var(--border);
+  }
+
+  .add-column .btn:hover {
+    color: var(--white);
+    background: var(--white);
+  }
+
+  /* ── ADD CARD ── */
+  .add-card-btn {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px dashed var(--gray-300);
+    color: var(--gray-400);
+    text-align: center;
+    font-size: 14px;
+    margin-top: auto;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .column:hover .add-card-btn,
+  .add-card-btn:focus {
+    opacity: 1;
+  }
+
+  .add-card-btn:hover {
+    border-color: var(--black);
+    color: var(--black);
+  }
+
+  .add-card-inline {
+    border: var(--border);
+    padding: 8px;
+  }
+
+  .add-card-inline input {
+    width: 100%;
+    border-bottom: 1px solid var(--gray-300);
+    padding: 4px 0;
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
+
+  /* ── INSERT LINE ── */
+  .insert-line {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 4px 0;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.1s;
+    height: 0;
+    overflow: visible;
+    position: relative;
+    justify-content: center;
+    margin: -3px 0;
+    z-index: 5;
+  }
+
+  .insert-line::before,
+  .insert-line::after {
+    content: '';
+    flex: 1;
+    height: 0;
+    border-top: 1.5px dashed var(--gray-300);
+  }
+
+  .insert-line-btn {
+    font-size: 11px;
+    color: var(--gray-400);
+    padding: 0 6px;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .insert-line:hover,
+  .insert-line.visible {
+    opacity: 1;
+    height: auto;
+    padding: 6px 0;
+    margin: 0;
+  }
+
+  .insert-line:hover::before,
+  .insert-line:hover::after,
+  .insert-line.visible::before,
+  .insert-line.visible::after {
+    border-top-color: var(--black);
+  }
+
+  .insert-line:hover .insert-line-btn,
+  .insert-line.visible .insert-line-btn {
+    color: var(--black);
+  }
+
+  .add-card-inline-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 500;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    overflow-y: auto;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--white);
+    border: var(--border);
+    width: 100%;
+    max-width: 560px;
+    position: relative;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: bold;
+    flex: 1;
+    border: none;
+    width: 100%;
+    padding: 0;
+    line-height: 1.3;
+  }
+
+  .modal-title:focus {
+    outline: 1px dashed var(--gray-400);
+    outline-offset: 2px;
+  }
+
+  .modal-close {
+    font-size: 24px;
+    line-height: 1;
+    padding: 4px 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .modal-close:hover { background: var(--gray-200); }
+
+  .modal-body {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .modal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .modal-section-label {
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray-500);
+  }
+
+  .modal-notes {
+    width: 100%;
+    min-height: 80px;
+    border: var(--border-light);
+    padding: 8px;
+    resize: vertical;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .modal-notes:focus {
+    border-color: var(--black);
+  }
+
+  /* ── SUBTASKS ── */
+  .subtask-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .subtask-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .subtask-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--black);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .subtask-item .subtask-text {
+    flex: 1;
+    font-size: 15px;
+    border: none;
+    padding: 2px 0;
+    background: transparent;
+  }
+
+  .subtask-item .subtask-text:focus {
+    outline: 1px dashed var(--gray-400);
+    outline-offset: 2px;
+  }
+
+  .subtask-item.done .subtask-text {
+    text-decoration: line-through;
+    color: var(--gray-400);
+  }
+
+  .subtask-item .subtask-delete {
+    font-size: 18px;
+    color: var(--gray-400);
+    padding: 4px 6px;
+    visibility: hidden;
+  }
+
+  .subtask-item:hover .subtask-delete {
+    visibility: visible;
+  }
+
+  .subtask-delete:hover {
+    color: var(--tag-red);
+    background: none;
+  }
+
+  .add-subtask-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .add-subtask-row input {
+    flex: 1;
+    border-bottom: 1px dashed var(--gray-300);
+    padding: 4px 0;
+  }
+
+  .settings-input {
+    width: 100%;
+    border: var(--border-light);
+    padding: 6px 8px;
+  }
+
+  .settings-input:focus {
+    border-color: var(--black);
+  }
+
+  /* ── LINKS ── */
+  .links-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .link-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 14px;
+  }
+
+  .link-item a {
+    flex: 1;
+    color: var(--black);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .link-item a:hover {
+    text-decoration: underline;
+  }
+
+  .link-item .link-delete {
+    font-size: 18px;
+    color: var(--gray-400);
+    padding: 4px 6px;
+    visibility: hidden;
+  }
+
+  .link-item:hover .link-delete {
+    visibility: visible;
+  }
+
+  .link-item .link-delete:hover {
+    color: var(--tag-red);
+    background: none;
+  }
+
+  .add-link-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .add-link-row input {
+    flex: 1;
+    border-bottom: 1px dashed var(--gray-300);
+    padding: 4px 0;
+  }
+
+  .gmail-thread-btn {
+    font-size: 13px;
+    color: var(--gray-500);
+    padding: 6px 0;
+    text-align: left;
+    border-bottom: 1px dashed var(--gray-200);
+  }
+
+  .gmail-thread-btn:hover {
+    color: var(--black);
+  }
+
+  .gmail-id-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .gmail-id-row input {
+    flex: 1;
+    border-bottom: 1px dashed var(--gray-300);
+    padding: 4px 0;
+  }
+
+  .paste-hint {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-top: 2px;
+  }
+
+  /* ── TAGS ── */
+  .tags-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tag-pill {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--white);
+    cursor: default;
+  }
+
+  .tag-pill.color-only {
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    justify-content: center;
+  }
+
+  .tag-pill.color-only .tag-remove {
+    position: static;
+  }
+
+  .tag-pill .tag-remove {
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    color: var(--white);
+    line-height: 1;
+    transition: opacity 0.1s;
+    position: absolute;
+    right: 4px;
+  }
+
+  .tag-pill {
+    position: relative;
+  }
+
+  .tag-pill .tag-label-text {
+    transition: opacity 0.1s;
+  }
+
+  .tag-pill:hover .tag-remove {
+    opacity: 1;
+  }
+
+  .tag-pill:hover .tag-label-text {
+    opacity: 0.4;
+  }
+
+  .add-tag-btn {
+    font-size: 13px;
+    color: var(--gray-400);
+    padding: 4px 0;
+    text-align: left;
+  }
+
+  .add-tag-btn:hover {
+    color: var(--black);
+  }
+
+  .tag-picker {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: var(--border-light);
+    margin-top: 4px;
+  }
+
+  .tag-picker.open {
+    display: flex;
+  }
+
+  .tags-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tag-option {
+    width: 28px;
+    height: 28px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .tag-option:hover {
+    border-color: var(--black);
+  }
+
+  .tag-option.selected::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .tag-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .tag-label-edit {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 15px;
+  }
+
+  .tag-label-edit .tag-swatch {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  .tag-label-edit input {
+    border-bottom: 1px solid var(--gray-300);
+    padding: 2px 4px;
+    font-size: 15px;
+    width: 80px;
+  }
+
+  /* ── MODAL FOOTER ── */
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-column-info {
+    font-size: 15px;
+    color: var(--gray-500);
+    cursor: pointer;
+  }
+
+  .modal-column-info:hover {
+    color: var(--black);
+  }
+
+  .move-to-select {
+    font-size: 14px;
+    border: var(--border);
+    padding: 4px 8px;
+    background: var(--white);
+    cursor: pointer;
+  }
+
+  /* ── BOARD MANAGEMENT MODAL ── */
+  .board-manage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .board-manage-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: var(--border-light);
+  }
+
+  .board-manage-item input {
+    flex: 1;
+    font-weight: bold;
+    border-bottom: 1px solid transparent;
+    padding: 2px 0;
+  }
+
+  .board-manage-item input:focus {
+    border-bottom-color: var(--gray-300);
+  }
+
+  /* ── CONFIRM DIALOG ── */
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 600;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .confirm-overlay.open { display: flex; }
+
+  .confirm-box {
+    background: var(--white);
+    border: var(--border);
+    padding: 20px;
+    max-width: 340px;
+    width: 100%;
+  }
+
+  .confirm-box p {
+    margin-bottom: 16px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .confirm-box .confirm-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 640px) {
+    .topbar {
+      padding: 10px 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .board {
+      min-height: calc(100vh - 60px);
+    }
+
+    .column {
+      min-width: 260px;
+    }
+
+    .modal {
+      max-width: 100%;
+      margin: 0;
+    }
+
+    .modal-overlay {
+      padding: 20px 8px;
+    }
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-board {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 49px);
+    color: var(--gray-400);
+    font-size: 15px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .empty-board .btn {
+    color: var(--gray-600);
+  }
+
+  /* ── DRAG PLACEHOLDER ── */
+  .card-placeholder {
+    border: 1.5px dashed var(--gray-300);
+    min-height: 40px;
+    background: var(--gray-50);
+  }
+
+  /* ── IMAGES ── */
+  .images-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .image-thumb-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .image-thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .image-thumb-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background: rgba(0,0,0,0.6);
+    color: var(--white);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.1s;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .image-thumb-wrap:hover .image-thumb-remove {
+    opacity: 1;
+  }
+
+  .add-image-btn {
+    width: 80px;
+    height: 80px;
+    border: 1.5px dashed var(--gray-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--gray-400);
+    cursor: pointer;
+  }
+
+  .add-image-btn:hover {
+    border-color: var(--black);
+    color: var(--black);
+  }
+
+  .image-paste-hint {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-top: 4px;
+  }
+
+  /* Card board thumbnail */
+  .card-thumbnail {
+    width: 100%;
+    height: 120px;
+    overflow: hidden;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .card-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .image-indicator {
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+
+  /* Lightbox */
+  .lightbox-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 700;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .lightbox-overlay.open {
+    display: flex;
+  }
+
+  .lightbox-overlay img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+  }
+
+  /* Image drop overlay */
+  .modal-drop-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.92);
+    border: 2.5px dashed var(--black);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--black);
+    pointer-events: none;
+  }
+
+  .modal.drag-over .modal-drop-overlay {
+    display: flex;
+  }
+
+  /* ── RELATED CARDS ── */
+  .related-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .related-card-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--gray-200);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .related-card-item:hover {
+    background: var(--gray-50);
+  }
+
+  .related-card-title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .related-card-col {
+    font-size: 11px;
+    color: var(--gray-400);
+    flex-shrink: 0;
+  }
+
+  .related-card-remove {
+    font-size: 14px;
+    color: var(--gray-400);
+    padding: 0 4px;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .related-card-item:hover .related-card-remove {
+    opacity: 1;
+  }
+
+  .related-card-remove:hover {
+    color: var(--tag-red);
+    background: none;
+  }
+
+  .related-search-wrap {
+    display: none;
+    position: relative;
+  }
+
+  .related-search-wrap.open {
+    display: block;
+  }
+
+  .related-search-input {
+    width: 100%;
+    border: var(--border-light);
+    padding: 6px 8px;
+  }
+
+  .related-search-input:focus {
+    border-color: var(--black);
+  }
+
+  .related-search-results {
+    border: var(--border-light);
+    border-top: none;
+    max-height: 160px;
+    overflow-y: auto;
+    display: none;
+  }
+
+  .related-search-results.has-results {
+    display: block;
+  }
+
+  .related-search-result {
+    padding: 8px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .related-search-result:hover {
+    background: var(--gray-100);
+  }
+
+  .related-search-result .result-col {
+    font-size: 11px;
+    color: var(--gray-400);
+  }
+
+  /* ── ARCHIVED CARD LOOK ── */
+  .modal.archived {
+    background: var(--gray-100);
+  }
+
+  .modal.archived .modal-header {
+    background: var(--gray-100);
+  }
+
+  .modal.archived .modal-title {
+    color: var(--gray-600);
+  }
+
+  .modal.archived .modal-notes {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border-color: var(--gray-300);
+  }
+
+  .modal.archived .modal-footer {
+    background: var(--gray-100);
+  }
+
+  /* ── ARCHIVE ── */
+  .archive-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-200);
+    gap: 12px;
+  }
+
+  .archive-item:hover {
+    background: var(--gray-50);
+  }
+
+  .archive-item:last-child {
+    border-bottom: none;
+  }
+
+  .archive-item-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .archive-item:hover .archive-item-actions {
+    opacity: 1;
+  }
+
+  .archive-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .archive-item-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .archive-item-meta {
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+
+
+
+  /* ── AUTH ── */
+  .sign-in-btn {
+    border: var(--border);
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--white);
+  }
+
+  .sign-in-btn:hover { background: var(--gray-100); }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+  }
+
+  .sync-indicator {
+    font-size: 11px;
+    color: var(--gray-400);
+  }
+
+  .sync-indicator.synced { color: var(--tag-green); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--gray-300); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Monoline</div>
+    <div class="board-selector" id="boardSelector">
+      <button class="board-selector-toggle" id="boardToggle" onclick="toggleBoardDropdown()">
+        <span id="boardToggleLabel">My Board</span>
+        <span class="arrow">▼</span>
+      </button>
+      <div class="board-dropdown" id="boardDropdown"></div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="sync-indicator" id="syncIndicator"></span>
+    <button class="btn btn-sm" onclick="openBoardSettings()">⚙</button>
+    <button class="sign-in-btn" id="signInBtn" onclick="signIn()" style="display:none">Sign in</button>
+    <div class="user-info" id="userInfo" style="display:none">
+      <img class="user-avatar" id="userAvatar" />
+      <button class="btn btn-sm" onclick="signOutUser()">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD AREA -->
+<div class="board" id="board"></div>
+
+<!-- CARD DETAIL MODAL -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal">
+    <div class="modal-drop-overlay">Drop images here</div>
+    <div class="modal-header">
+      <input class="modal-title" id="modalTitle" placeholder="Card title..." />
+      <button class="modal-close" onclick="closeCardModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Notes -->
+      <div class="modal-section">
+        <div class="modal-section-label">Notes</div>
+        <textarea class="modal-notes" id="modalNotes" placeholder="Write anything..."></textarea>
+      </div>
+
+      <!-- Images -->
+      <div class="modal-section">
+        <div class="modal-section-label">Images</div>
+        <div class="images-grid" id="modalImages"></div>
+        <input type="file" id="imageFileInput" accept="image/*" multiple style="display:none" onchange="handleImageFiles(this.files)" />
+        <div class="image-paste-hint">Paste or drop images here</div>
+      </div>
+
+      <!-- Sub-tasks -->
+      <div class="modal-section">
+        <div class="modal-section-label">Sub-tasks</div>
+        <div class="subtask-list" id="modalSubtasks"></div>
+        <div class="add-subtask-row">
+          <input id="newSubtaskInput" placeholder="Add a sub-task..." onkeydown="if(event.key==='Enter'){addSubtask()}" />
+          <button class="btn btn-sm" onclick="addSubtask()">+</button>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div class="modal-section">
+        <div class="modal-section-label">Links</div>
+        <div class="links-list" id="modalLinks"></div>
+        <div class="add-link-row">
+          <input id="newLinkInput" placeholder="Paste or type a URL..." onkeydown="if(event.key==='Enter'){addLinkFromInput()}" />
+          <button class="btn btn-sm" onclick="addLinkFromInput()">+</button>
+        </div>
+        <button class="gmail-thread-btn" onclick="showGmailIdInput()">✉ + Related Gmail thread</button>
+        <div class="gmail-id-row" id="gmailIdRow" style="display:none">
+          <input id="gmailIdInput" placeholder="Paste message ID..." onkeydown="if(event.key==='Enter'){addGmailThread()}" />
+          <button class="btn btn-sm" onclick="addGmailThread()">Add</button>
+          <button class="btn btn-sm" onclick="hideGmailIdInput()">Cancel</button>
+        </div>
+        <div class="paste-hint">Tip: paste any URL while this card is open</div>
+      </div>
+
+      <!-- Tags -->
+      <div class="modal-section">
+        <div class="modal-section-label">Tags</div>
+        <div class="tags-selected" id="modalTagsSelected">
+          <button class="add-tag-btn" id="addTagBtn" onclick="toggleTagPicker(event)">+ Tag</button>
+        </div>
+        <div class="tag-picker" id="tagPicker"></div>
+      </div>
+
+      <!-- Related Cards -->
+      <div class="modal-section">
+        <div class="modal-section-label">Related Cards</div>
+        <div class="related-cards-list" id="modalRelated"></div>
+        <div class="related-search-wrap" id="relatedSearchWrap">
+          <input class="related-search-input" id="relatedSearchInput" placeholder="Search cards to link..." oninput="filterRelatedSearch()" onfocus="filterRelatedSearch()" />
+          <div class="related-search-results" id="relatedSearchResults"></div>
+        </div>
+        <button class="add-tag-btn" id="addRelatedBtn" onclick="toggleRelatedSearch()">+ Related Card</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-column-info" id="modalColumnInfo" style="display:none"></div>
+      <select class="move-to-select" id="moveToSelect" onchange="moveCardToColumn(this.value)"></select>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="archiveCurrentCard()">Archive</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteCurrentCard()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD SETTINGS MODAL -->
+<div class="modal-overlay" id="boardSettingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span style="font-weight:bold;font-size:16px">Board Settings</span>
+      <button class="modal-close" onclick="closeBoardSettings()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-label">Board Name</div>
+        <input id="boardNameInput" class="settings-input" />
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-label">Tag Labels</div>
+        <div id="boardTagLabels"></div>
+      </div>
+      <div class="modal-section">
+        <button class="btn btn-sm" onclick="closeBoardSettings();openArchive()">View Archived Cards <span id="archiveCount" style="color:var(--gray-400)"></span></button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-danger" onclick="deleteCurrentBoard()">Delete board</button>
+      <button class="btn btn-sm" onclick="saveBoardSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHIVE MODAL -->
+<div class="modal-overlay" id="archiveModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span style="font-weight:bold;font-size:16px">Archived Cards</span>
+      <button class="modal-close" onclick="closeArchive()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="archiveList"></div>
+      <div id="archiveEmpty" style="color:var(--gray-400);font-size:13px;padding:12px 0">No archived cards.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmDialog">
+  <div class="confirm-box">
+    <p id="confirmMessage"></p>
+    <div class="confirm-actions">
+      <button class="btn btn-sm" id="confirmCancel">Cancel</button>
+      <button class="btn btn-sm btn-danger" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" />
+</div>
+
+<script>
+// ── FIREBASE ──
+const firebaseConfig = {
+  apiKey: "AIzaSyCziCF_5iatbDls1f-zYps-cfJileL8q3A",
+  authDomain: "monolineapp.firebaseapp.com",
+  projectId: "monolineapp",
+  storageBucket: "monolineapp.firebasestorage.app",
+  messagingSenderId: "954701449967",
+  appId: "1:954701449967:web:52f39ff1eea3bab376691a",
+};
+const fbApp = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const fbAuth = firebase.auth();
+const fbStorage = firebase.storage();
+let currentUser = null;
+let firestoreUnsub = null;
+let saveTimer = null;
+
+const TAG_COLORS = [
+  { key: 'red', color: '#ef4444' },
+  { key: 'orange', color: '#f97316' },
+  { key: 'yellow', color: '#eab308' },
+  { key: 'green', color: '#22c55e' },
+  { key: 'blue', color: '#3b82f6' },
+  { key: 'purple', color: '#a855f7' },
+  { key: 'pink', color: '#ec4899' },
+];
+
+let data = loadData();
+let currentBoardId = data.currentBoardId;
+let editingCardId = null;
+
+function loadData() {
+  const raw = localStorage.getItem('monoline_data');
+  if (raw) {
+    try { return JSON.parse(raw); } catch(e) {}
+  }
+  const defaultBoard = createDefaultBoard('My Board');
+  return {
+    boards: [defaultBoard],
+    currentBoardId: defaultBoard.id,
+  };
+}
+
+function save() {
+  data.currentBoardId = currentBoardId;
+  localStorage.setItem('monoline_data', JSON.stringify(data));
+  if (currentUser) saveToFirestore();
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function createDefaultBoard(name) {
+  return {
+    id: uid(),
+    name: name,
+    tagLabels: {},
+    columns: [
+      { id: uid(), title: 'To Do', cards: [] },
+      { id: uid(), title: 'In Progress', cards: [] },
+      { id: uid(), title: 'Done', cards: [] },
+    ],
+  };
+}
+
+function getBoard() {
+  return data.boards.find(b => b.id === currentBoardId) || data.boards[0];
+}
+
+// ── RENDER ──
+
+function render() {
+  renderBoardSelector();
+  renderBoard();
+}
+
+function renderBoardSelector() {
+  const board = getBoard();
+  document.getElementById('boardToggleLabel').textContent = board ? board.name : 'No Board';
+
+  const dropdown = document.getElementById('boardDropdown');
+  dropdown.innerHTML = '';
+
+  data.boards.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'board-dropdown-item' + (b.id === currentBoardId ? ' active' : '');
+    btn.textContent = b.name;
+    btn.onclick = () => {
+      currentBoardId = b.id;
+      save();
+      closeBoardDropdown();
+      render();
+    };
+    dropdown.appendChild(btn);
+  });
+
+  const newBtn = document.createElement('button');
+  newBtn.className = 'board-dropdown-new';
+  newBtn.textContent = '+ New Board';
+  newBtn.onclick = () => {
+    closeBoardDropdown();
+    createBoard();
+  };
+  dropdown.appendChild(newBtn);
+}
+
+function toggleBoardDropdown() {
+  document.getElementById('boardDropdown').classList.toggle('open');
+}
+
+function closeBoardDropdown() {
+  document.getElementById('boardDropdown').classList.remove('open');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#boardSelector')) {
+    closeBoardDropdown();
+  }
+});
+
+function renderBoard() {
+  const board = getBoard();
+  const container = document.getElementById('board');
+  container.innerHTML = '';
+
+  if (!board) return;
+
+  board.columns.forEach(col => {
+    container.appendChild(renderColumn(col, board));
+  });
+
+  // Add column button
+  const addColDiv = document.createElement('div');
+  addColDiv.className = 'add-column';
+  addColDiv.innerHTML = '<button class="btn" onclick="addColumn()" title="Add column">+</button>';
+  container.appendChild(addColDiv);
+}
+
+function renderColumn(col, board) {
+  const div = document.createElement('div');
+  div.className = 'column';
+  div.dataset.columnId = col.id;
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'column-header';
+
+  const title = document.createElement('span');
+  title.className = 'column-title';
+  title.contentEditable = true;
+  title.textContent = col.title;
+  title.spellcheck = false;
+  title.onblur = () => {
+    const newTitle = title.textContent.trim();
+    if (newTitle && newTitle !== col.title) {
+      col.title = newTitle;
+      save();
+    } else {
+      title.textContent = col.title;
+    }
+  };
+  title.onkeydown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); title.blur(); }
+  };
+
+  const count = document.createElement('span');
+  count.className = 'column-count';
+  count.textContent = col.cards.length;
+
+  const actions = document.createElement('div');
+  actions.className = 'column-actions';
+
+  const deleteColBtn = document.createElement('button');
+  deleteColBtn.className = 'btn-icon';
+  deleteColBtn.innerHTML = '×';
+  deleteColBtn.title = 'Delete column';
+  deleteColBtn.onclick = () => deleteColumn(col.id);
+
+  actions.appendChild(deleteColBtn);
+  header.appendChild(title);
+  header.appendChild(count);
+  header.appendChild(actions);
+  div.appendChild(header);
+
+  // Body (cards)
+  const body = document.createElement('div');
+  body.className = 'column-body';
+  body.dataset.columnId = col.id;
+
+  // Drag events on body
+  body.ondragover = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const afterEl = getDragAfterElement(body, e.clientY);
+    const dragging = document.querySelector('.dragging');
+    if (!dragging) return;
+    if (!afterEl) {
+      body.appendChild(dragging);
+    } else {
+      body.insertBefore(dragging, afterEl);
+    }
+  };
+  body.ondrop = (e) => {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData('text/plain');
+    const fromColId = e.dataTransfer.getData('from-column');
+    handleDrop(cardId, fromColId, col.id, body);
+  };
+
+  col.cards.forEach((card, i) => {
+    // Insert line before each card
+    body.appendChild(createInsertLine(col, i));
+    body.appendChild(renderCard(card, col, board));
+  });
+  // Insert line after last card
+  body.appendChild(createInsertLine(col, col.cards.length));
+
+  // Add card button at bottom (appears on column hover)
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-card-btn';
+  addBtn.textContent = '+ Add card';
+  addBtn.onclick = () => showInlineAdd(body, col, addBtn, col.cards.length);
+
+  div.appendChild(body);
+  div.appendChild(addBtn);
+  return div;
+}
+
+function renderCard(card, col, board) {
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.draggable = true;
+  div.dataset.cardId = card.id;
+
+  div.ondragstart = (e) => {
+    e.dataTransfer.setData('text/plain', card.id);
+    e.dataTransfer.setData('from-column', col.id);
+    e.dataTransfer.effectAllowed = 'move';
+    requestAnimationFrame(() => div.classList.add('dragging'));
+  };
+  div.ondragend = () => div.classList.remove('dragging');
+  div.onclick = () => openCardModal(card.id);
+
+  // Image thumbnail
+  if (card.images && card.images.length > 0) {
+    const thumb = document.createElement('div');
+    thumb.className = 'card-thumbnail';
+    const img = document.createElement('img');
+    img.src = card.images[0];
+    thumb.appendChild(img);
+    div.appendChild(thumb);
+  }
+
+  // Title
+  const titleEl = document.createElement('div');
+  titleEl.className = 'card-title';
+  titleEl.textContent = card.title;
+  div.appendChild(titleEl);
+
+  // Notes preview
+  if (card.notes) {
+    const preview = document.createElement('div');
+    preview.className = 'card-notes-preview';
+    preview.textContent = card.notes;
+    div.appendChild(preview);
+  }
+
+  // Meta row
+  const meta = document.createElement('div');
+  meta.className = 'card-meta';
+
+  // Tags
+  if (card.tags && card.tags.length > 0) {
+    const tagsDiv = document.createElement('div');
+    tagsDiv.className = 'card-tags';
+    card.tags.forEach(t => {
+      const tc = TAG_COLORS.find(c => c.key === t);
+      if (!tc) return;
+      const span = document.createElement('span');
+      span.className = 'tag';
+      span.style.background = tc.color;
+      const label = board.tagLabels && board.tagLabels[t];
+      if (label) {
+        span.textContent = label;
+      } else {
+        span.style.width = '16px';
+        span.style.height = '10px';
+        span.style.display = 'inline-block';
+      }
+      tagsDiv.appendChild(span);
+    });
+    meta.appendChild(tagsDiv);
+  }
+
+  // Indicators
+  const indicators = document.createElement('div');
+  indicators.className = 'card-indicators';
+
+  if (card.images && card.images.length > 0) {
+    const span = document.createElement('span');
+    span.className = 'image-indicator';
+    span.textContent = `📷 ${card.images.length}`;
+    indicators.appendChild(span);
+  }
+
+  if (card.subtasks && card.subtasks.length > 0) {
+    const done = card.subtasks.filter(s => s.done).length;
+    const span = document.createElement('span');
+    span.className = 'subtask-progress';
+    span.textContent = `☑ ${done}/${card.subtasks.length}`;
+    indicators.appendChild(span);
+  }
+
+  const links = card.links || (card.gmail ? [card.gmail] : []);
+  if (links.length > 0) {
+    const a = document.createElement('a');
+    a.className = 'link-indicator';
+    a.href = links[0];
+    a.target = '_blank';
+    a.textContent = links.length === 1 ? '🔗 1 link' : `🔗 ${links.length} links`;
+    a.onclick = (e) => e.stopPropagation();
+    indicators.appendChild(a);
+  }
+
+  meta.appendChild(indicators);
+  div.appendChild(meta);
+
+  return div;
+}
+
+// ── DRAG & DROP ──
+
+function getDragAfterElement(container, y) {
+  const cards = [...container.querySelectorAll('.card:not(.dragging)')];
+  return cards.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset, element: child };
+    }
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function handleDrop(cardId, fromColId, toColId, bodyEl) {
+  const board = getBoard();
+  const fromCol = board.columns.find(c => c.id === fromColId);
+  const toCol = board.columns.find(c => c.id === toColId);
+  if (!fromCol || !toCol) return;
+
+  const cardIdx = fromCol.cards.findIndex(c => c.id === cardId);
+  if (cardIdx === -1) return;
+  const [card] = fromCol.cards.splice(cardIdx, 1);
+
+  // Determine new position from DOM
+  const cardEls = [...bodyEl.querySelectorAll('.card')];
+  const domIdx = cardEls.findIndex(el => el.dataset.cardId === cardId);
+  if (domIdx === -1) {
+    toCol.cards.push(card);
+  } else {
+    toCol.cards.splice(domIdx, 0, card);
+  }
+
+  save();
+  render();
+}
+
+// ── INLINE ADD CARD ──
+
+function createInsertLine(col, index) {
+  const line = document.createElement('div');
+  line.className = 'insert-line';
+  line.innerHTML = '<span class="insert-line-btn">+</span>';
+  line.onclick = (e) => {
+    e.stopPropagation();
+    const body = line.closest('.column-body');
+    const addBtn = line.closest('.column').querySelector('.add-card-btn');
+    showInlineAdd(body, col, addBtn, index, line);
+  };
+  return line;
+}
+
+function showInlineAdd(body, col, addBtn, index, insertLine) {
+  if (body.querySelector('.add-card-inline')) return;
+
+  if (addBtn) addBtn.style.display = 'none';
+  const form = document.createElement('div');
+  form.className = 'add-card-inline';
+
+  const input = document.createElement('input');
+  input.placeholder = 'Card title...';
+  input.onkeydown = (e) => {
+    if (e.key === 'Enter' && input.value.trim()) {
+      createCard(col.id, input.value.trim(), index);
+      if (addBtn) addBtn.style.display = '';
+    }
+    if (e.key === 'Escape') {
+      if (addBtn) addBtn.style.display = '';
+      render();
+    }
+  };
+
+  const actions = document.createElement('div');
+  actions.className = 'add-card-inline-actions';
+
+  const addBtnEl = document.createElement('button');
+  addBtnEl.className = 'btn btn-sm';
+  addBtnEl.textContent = 'Add';
+  addBtnEl.onclick = () => {
+    if (input.value.trim()) {
+      createCard(col.id, input.value.trim(), index);
+      if (addBtn) addBtn.style.display = '';
+    }
+  };
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn btn-sm';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = () => {
+    if (addBtn) addBtn.style.display = '';
+    render();
+  };
+
+  actions.appendChild(addBtnEl);
+  actions.appendChild(cancelBtn);
+  form.appendChild(input);
+  form.appendChild(actions);
+
+  if (insertLine) {
+    insertLine.replaceWith(form);
+  } else {
+    body.appendChild(form);
+  }
+  input.focus();
+}
+
+// ── CRUD ──
+
+function createCard(columnId, title, index) {
+  const board = getBoard();
+  const col = board.columns.find(c => c.id === columnId);
+  if (!col) return;
+  const card = {
+    id: uid(),
+    title,
+    notes: '',
+    subtasks: [],
+    links: [],
+    tags: [],
+    images: [],
+  };
+  if (index !== undefined && index < col.cards.length) {
+    col.cards.splice(index, 0, card);
+  } else {
+    col.cards.push(card);
+  }
+  save();
+  render();
+}
+
+function addColumn() {
+  const board = getBoard();
+  board.columns.push({
+    id: uid(),
+    title: 'New Column',
+    cards: [],
+  });
+  save();
+  render();
+  // Focus the new column title
+  const cols = document.querySelectorAll('.column-title');
+  const last = cols[cols.length - 1];
+  if (last) {
+    last.focus();
+    const range = document.createRange();
+    range.selectNodeContents(last);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
+function deleteColumn(colId) {
+  const board = getBoard();
+  const col = board.columns.find(c => c.id === colId);
+  if (!col) return;
+  const count = col.cards.length;
+  const msg = count
+    ? `Delete "${col.title}" and its ${count} card${count>1?'s':''}?`
+    : `Delete empty column "${col.title}"?`;
+  confirm(msg, () => {
+    board.columns = board.columns.filter(c => c.id !== colId);
+    save();
+    render();
+  });
+}
+
+function createBoard() {
+  const name = prompt('Board name:');
+  if (!name || !name.trim()) return;
+  const board = createDefaultBoard(name.trim());
+  data.boards.push(board);
+  currentBoardId = board.id;
+  save();
+  render();
+}
+
+function deleteCurrentBoard() {
+  if (data.boards.length <= 1) {
+    alert('Cannot delete the only board.');
+    return;
+  }
+  const board = getBoard();
+  confirm(`Delete board "${board.name}" and all its data?`, () => {
+    data.boards = data.boards.filter(b => b.id !== board.id);
+    currentBoardId = data.boards[0].id;
+    closeBoardSettings();
+    save();
+    render();
+  });
+}
+
+// ── CARD MODAL ──
+
+function openCardModal(cardId) {
+  // Reset any archived state
+  const modalEl = document.querySelector('#cardModal .modal');
+  modalEl.classList.remove('archived');
+  document.getElementById('modalTitle').readOnly = false;
+  document.getElementById('modalNotes').readOnly = false;
+  viewingArchivedIndex = null;
+
+  // Restore editing controls that may have been hidden
+  document.querySelectorAll('.add-subtask-row, .add-link-row, .gmail-thread-btn, #gmailIdRow, .paste-hint, .image-paste-hint, #addTagBtn, #tagPicker, #relatedSearchWrap, #addRelatedBtn, #moveToSelect').forEach(el => {
+    el.style.display = el.dataset.prevDisplay || '';
+    delete el.dataset.prevDisplay;
+  });
+
+  // Restore footer
+  const footer = document.querySelector('#cardModal .modal-footer');
+  if (footer.dataset.origHtml) {
+    footer.innerHTML = footer.dataset.origHtml;
+    delete footer.dataset.origHtml;
+  }
+
+  editingCardId = cardId;
+  const board = getBoard();
+  let card, col;
+  for (const c of board.columns) {
+    const found = c.cards.find(cd => cd.id === cardId);
+    if (found) { card = found; col = c; break; }
+  }
+  if (!card) return;
+
+  document.getElementById('modalTitle').value = card.title;
+  document.getElementById('modalNotes').value = card.notes || '';
+  document.getElementById('modalColumnInfo').textContent = `in "${col.title}"`;
+
+  const moveSelect = document.getElementById('moveToSelect');
+  moveSelect.innerHTML = '';
+  board.columns.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.title;
+    if (c.id === col.id) opt.selected = true;
+    moveSelect.appendChild(opt);
+  });
+
+  document.getElementById('tagPicker').classList.remove('open');
+  document.getElementById('gmailIdRow').style.display = 'none';
+
+  // Migrate legacy gmail field to links
+  if (card.gmail && (!card.links || !card.links.includes(card.gmail))) {
+    if (!card.links) card.links = [];
+    card.links.unshift(card.gmail);
+    delete card.gmail;
+    save();
+  }
+
+  renderModalImages(card);
+  renderModalLinks(card);
+  renderModalSubtasks(card);
+  renderModalTags(card, board);
+  renderModalRelated(card, board);
+  document.getElementById('relatedSearchWrap').classList.remove('open');
+
+  document.getElementById('cardModal').classList.add('open');
+  document.getElementById('modalTitle').focus();
+}
+
+function closeCardModal() {
+  if (viewingArchivedIndex !== null) {
+    closeArchivedCard();
+    return;
+  }
+  if (editingCardId) saveCardFromModal();
+  editingCardId = null;
+  document.getElementById('cardModal').classList.remove('open');
+  render();
+}
+
+function saveCardFromModal() {
+  const board = getBoard();
+  for (const col of board.columns) {
+    const card = col.cards.find(c => c.id === editingCardId);
+    if (card) {
+      card.title = document.getElementById('modalTitle').value.trim() || card.title;
+      card.notes = document.getElementById('modalNotes').value;
+      break;
+    }
+  }
+  save();
+}
+
+function deleteCurrentCard() {
+  const board = getBoard();
+  confirm('Delete this card?', () => {
+    for (const col of board.columns) {
+      const idx = col.cards.findIndex(c => c.id === editingCardId);
+      if (idx !== -1) {
+        col.cards.splice(idx, 1);
+        break;
+      }
+    }
+    editingCardId = null;
+    document.getElementById('cardModal').classList.remove('open');
+    save();
+    render();
+  });
+}
+
+function moveCardToColumn(toColId) {
+  if (!editingCardId) return;
+  const board = getBoard();
+  let card, fromCol;
+  for (const col of board.columns) {
+    const idx = col.cards.findIndex(c => c.id === editingCardId);
+    if (idx !== -1) { card = col.cards[idx]; fromCol = col; break; }
+  }
+  if (!card || fromCol.id === toColId) return;
+
+  fromCol.cards = fromCol.cards.filter(c => c.id !== editingCardId);
+  const toCol = board.columns.find(c => c.id === toColId);
+  if (!toCol) return;
+  toCol.cards.push(card);
+
+  document.getElementById('modalColumnInfo').textContent = `in "${toCol.title}"`;
+  save();
+}
+
+function archiveCurrentCard() {
+  const board = getBoard();
+  if (!board.archived) board.archived = [];
+  for (const col of board.columns) {
+    const idx = col.cards.findIndex(c => c.id === editingCardId);
+    if (idx !== -1) {
+      const [card] = col.cards.splice(idx, 1);
+      card.archivedAt = new Date().toISOString();
+      card.archivedFrom = col.title;
+      board.archived.unshift(card);
+      break;
+    }
+  }
+  editingCardId = null;
+  document.getElementById('cardModal').classList.remove('open');
+  save();
+  render();
+}
+
+// ── ARCHIVE ──
+
+function openArchive() {
+  const board = getBoard();
+  const list = document.getElementById('archiveList');
+  const empty = document.getElementById('archiveEmpty');
+  list.innerHTML = '';
+
+  const archived = board.archived || [];
+  empty.style.display = archived.length ? 'none' : 'block';
+
+  archived.forEach((card, i) => {
+    const item = document.createElement('div');
+    item.className = 'archive-item';
+    item.style.cursor = 'pointer';
+    item.onclick = () => { closeArchive(); openArchivedCard(i); };
+
+    const info = document.createElement('div');
+    info.className = 'archive-item-info';
+
+    const title = document.createElement('div');
+    title.className = 'archive-item-title';
+    title.textContent = card.title;
+
+    const meta = document.createElement('div');
+    meta.className = 'archive-item-meta';
+    const date = card.archivedAt ? new Date(card.archivedAt).toLocaleDateString() : '';
+    meta.textContent = date + (card.archivedFrom ? ' · from ' + card.archivedFrom : '');
+
+    info.appendChild(title);
+    info.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'archive-item-actions';
+
+    const previewBtn = document.createElement('button');
+    previewBtn.className = 'btn btn-sm';
+    previewBtn.textContent = 'Preview';
+    previewBtn.onclick = (e) => { e.stopPropagation(); closeArchive(); openArchivedCard(i); };
+
+    const restoreBtn = document.createElement('button');
+    restoreBtn.className = 'btn btn-sm';
+    restoreBtn.textContent = 'Restore';
+    restoreBtn.onclick = (e) => { e.stopPropagation(); restoreCard(i); };
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-sm btn-danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = (e) => {
+      e.stopPropagation();
+      const board = getBoard();
+      confirm('Permanently delete this card?', () => {
+        board.archived.splice(i, 1);
+        save();
+        openArchive();
+      });
+    };
+
+    actions.appendChild(previewBtn);
+    actions.appendChild(restoreBtn);
+    actions.appendChild(deleteBtn);
+    item.appendChild(info);
+    item.appendChild(actions);
+    list.appendChild(item);
+  });
+
+  document.getElementById('archiveModal').classList.add('open');
+}
+
+function closeArchive() {
+  document.getElementById('archiveModal').classList.remove('open');
+}
+
+let viewingArchivedIndex = null;
+
+function openArchivedCard(index) {
+  const board = getBoard();
+  const card = board.archived[index];
+  if (!card) return;
+  viewingArchivedIndex = index;
+
+  const modal = document.getElementById('cardModal');
+  const modalEl = modal.querySelector('.modal');
+  modalEl.classList.add('archived');
+
+  document.getElementById('modalTitle').value = card.title;
+  document.getElementById('modalTitle').readOnly = true;
+  document.getElementById('modalNotes').value = card.notes || '';
+  document.getElementById('modalNotes').readOnly = true;
+
+  const date = card.archivedAt ? new Date(card.archivedAt).toLocaleDateString() : '';
+  document.getElementById('modalColumnInfo').textContent = 'archived ' + date + (card.archivedFrom ? ' · was in "' + card.archivedFrom + '"' : '');
+
+  document.getElementById('tagPicker').classList.remove('open');
+  document.getElementById('gmailIdRow').style.display = 'none';
+
+  // Render subtasks (read-only)
+  const subtaskContainer = document.getElementById('modalSubtasks');
+  subtaskContainer.innerHTML = '';
+  (card.subtasks || []).forEach(st => {
+    const div = document.createElement('div');
+    div.className = 'subtask-item' + (st.done ? ' done' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = st.done;
+    cb.disabled = true;
+    const text = document.createElement('span');
+    text.className = 'subtask-text';
+    text.style.padding = '2px 0';
+    text.textContent = st.text;
+    div.appendChild(cb);
+    div.appendChild(text);
+    subtaskContainer.appendChild(div);
+  });
+
+  // Render links (read-only)
+  const linksContainer = document.getElementById('modalLinks');
+  linksContainer.innerHTML = '';
+  (card.links || []).forEach(url => {
+    const div = document.createElement('div');
+    div.className = 'link-item';
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.textContent = prettifyUrl(url);
+    a.title = url;
+    div.appendChild(a);
+    linksContainer.appendChild(div);
+  });
+
+  // Render tags (read-only)
+  const selectedContainer = document.getElementById('modalTagsSelected');
+  selectedContainer.innerHTML = '';
+  (card.tags || []).forEach(t => {
+    const tc = TAG_COLORS.find(c => c.key === t);
+    if (!tc) return;
+    const pill = document.createElement('span');
+    pill.style.background = tc.color;
+    const label = board.tagLabels && board.tagLabels[t];
+    if (label) {
+      pill.className = 'tag-pill';
+      pill.innerHTML = `<span class="tag-label-text">${escapeHtml(label)}</span>`;
+    } else {
+      pill.className = 'tag-pill color-only';
+    }
+    selectedContainer.appendChild(pill);
+  });
+
+  // Render images (read-only)
+  renderModalImages(card, true);
+
+  // Render related cards (read-only)
+  renderModalRelated(card, board);
+
+  // Hide editing controls
+  document.querySelectorAll('.add-subtask-row, .add-link-row, .gmail-thread-btn, #gmailIdRow, .paste-hint, .image-paste-hint, #addTagBtn, #tagPicker, #relatedSearchWrap, #addRelatedBtn, #moveToSelect').forEach(el => {
+    el.dataset.prevDisplay = el.style.display;
+    el.style.display = 'none';
+  });
+
+  // Swap footer to archive actions
+  const footer = document.querySelector('#cardModal .modal-footer');
+  footer.dataset.origHtml = footer.innerHTML;
+  footer.innerHTML = `
+    <div class="modal-column-info" id="modalColumnInfoArchived">${document.getElementById('modalColumnInfo').textContent}</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-sm" onclick="restoreFromPreview()">Restore</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteFromPreview()">Delete</button>
+    </div>
+  `;
+
+  modal.classList.add('open');
+}
+
+function closeArchivedCard() {
+  viewingArchivedIndex = null;
+  const modal = document.getElementById('cardModal');
+  const modalEl = modal.querySelector('.modal');
+  modalEl.classList.remove('archived');
+
+  document.getElementById('modalTitle').readOnly = false;
+  document.getElementById('modalNotes').readOnly = false;
+
+  // Restore hidden editing controls
+  document.querySelectorAll('.add-subtask-row, .add-link-row, .gmail-thread-btn, #gmailIdRow, .paste-hint, .image-paste-hint, #addTagBtn, #tagPicker, #relatedSearchWrap, #addRelatedBtn, #moveToSelect').forEach(el => {
+    el.style.display = el.dataset.prevDisplay || '';
+    delete el.dataset.prevDisplay;
+  });
+
+  // Restore footer
+  const footer = document.querySelector('#cardModal .modal-footer');
+  if (footer.dataset.origHtml) {
+    footer.innerHTML = footer.dataset.origHtml;
+    delete footer.dataset.origHtml;
+  }
+
+  modal.classList.remove('open');
+  openArchive();
+}
+
+function restoreFromPreview() {
+  if (viewingArchivedIndex === null) return;
+  const idx = viewingArchivedIndex;
+  closeArchivedCard();
+  restoreCard(idx);
+}
+
+function deleteFromPreview() {
+  if (viewingArchivedIndex === null) return;
+  const board = getBoard();
+  confirm('Permanently delete this card?', () => {
+    board.archived.splice(viewingArchivedIndex, 1);
+    save();
+    closeArchivedCard();
+    openArchive();
+  });
+}
+
+function restoreCard(archiveIndex) {
+  const board = getBoard();
+  if (!board.archived) return;
+  const [card] = board.archived.splice(archiveIndex, 1);
+  const fromCol = board.columns.find(c => c.title === card.archivedFrom);
+  const targetCol = fromCol || board.columns[0];
+  if (!targetCol) return;
+  delete card.archivedAt;
+  delete card.archivedFrom;
+  targetCol.cards.push(card);
+  save();
+  render();
+  openArchive();
+}
+
+document.getElementById('archiveModal').onclick = (e) => {
+  if (e.target === document.getElementById('archiveModal')) closeArchive();
+};
+
+// ── SUBTASKS ──
+
+function getEditingCard() {
+  const board = getBoard();
+  for (const col of board.columns) {
+    const card = col.cards.find(c => c.id === editingCardId);
+    if (card) return card;
+  }
+  return null;
+}
+
+function renderModalSubtasks(card) {
+  const container = document.getElementById('modalSubtasks');
+  container.innerHTML = '';
+  (card.subtasks || []).forEach((st, i) => {
+    const div = document.createElement('div');
+    div.className = 'subtask-item' + (st.done ? ' done' : '');
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = st.done;
+    cb.onchange = () => {
+      st.done = cb.checked;
+      save();
+      renderModalSubtasks(card);
+    };
+
+    const text = document.createElement('input');
+    text.className = 'subtask-text';
+    text.value = st.text;
+    text.onblur = () => {
+      st.text = text.value.trim();
+      save();
+    };
+    text.onkeydown = (e) => {
+      if (e.key === 'Enter') text.blur();
+    };
+
+    const del = document.createElement('button');
+    del.className = 'btn-icon subtask-delete';
+    del.innerHTML = '×';
+    del.onclick = () => {
+      card.subtasks.splice(i, 1);
+      save();
+      renderModalSubtasks(card);
+    };
+
+    div.appendChild(cb);
+    div.appendChild(text);
+    div.appendChild(del);
+    container.appendChild(div);
+  });
+}
+
+function addSubtask() {
+  const input = document.getElementById('newSubtaskInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const card = getEditingCard();
+  if (!card) return;
+  if (!card.subtasks) card.subtasks = [];
+  card.subtasks.push({ text, done: false });
+  input.value = '';
+  save();
+  renderModalSubtasks(card);
+  input.focus();
+}
+
+// ── TAGS ──
+
+function renderModalTags(card, board) {
+  const selectedContainer = document.getElementById('modalTagsSelected');
+  const pickerContainer = document.getElementById('tagPicker');
+  const addTagBtn = document.getElementById('addTagBtn');
+  selectedContainer.innerHTML = '';
+  const wasOpen = pickerContainer.classList.contains('open');
+  pickerContainer.innerHTML = '';
+
+  // Show selected tags as pills
+  if (card.tags && card.tags.length > 0) {
+    card.tags.forEach(t => {
+      const tc = TAG_COLORS.find(c => c.key === t);
+      if (!tc) return;
+      const pill = document.createElement('span');
+      pill.style.background = tc.color;
+      const label = board.tagLabels && board.tagLabels[t];
+      if (label) {
+        pill.className = 'tag-pill';
+        pill.innerHTML = `<span class="tag-label-text">${escapeHtml(label)}</span><span class="tag-remove">×</span>`;
+      } else {
+        pill.className = 'tag-pill color-only';
+        pill.innerHTML = '<span class="tag-remove">×</span>';
+      }
+      pill.querySelector('.tag-remove').onclick = () => {
+        card.tags.splice(card.tags.indexOf(t), 1);
+        save();
+        renderModalTags(card, board);
+      };
+      selectedContainer.appendChild(pill);
+    });
+  }
+
+  // Re-append the + Tag button at the end of the row
+  selectedContainer.appendChild(addTagBtn);
+
+  // Vertical list picker (same layout as board settings)
+  TAG_COLORS.forEach(tc => {
+    const isSelected = card.tags && card.tags.includes(tc.key);
+    const row = document.createElement('div');
+    row.className = 'tag-label-edit';
+    row.style.marginBottom = '4px';
+    row.style.cursor = 'pointer';
+
+    const swatch = document.createElement('div');
+    swatch.className = 'tag-swatch';
+    swatch.style.background = tc.color;
+    if (isSelected) {
+      swatch.style.outline = '2px solid var(--black)';
+      swatch.style.outlineOffset = '1px';
+    }
+
+    const input = document.createElement('input');
+    input.placeholder = '';
+    input.value = (board.tagLabels && board.tagLabels[tc.key]) || '';
+    input.onclick = (e) => e.stopPropagation();
+    input.onblur = () => {
+      if (!board.tagLabels) board.tagLabels = {};
+      board.tagLabels[tc.key] = input.value.trim();
+      save();
+      renderModalTags(card, board);
+    };
+    input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
+
+    swatch.onclick = () => {
+      if (!card.tags) card.tags = [];
+      const idx = card.tags.indexOf(tc.key);
+      if (idx === -1) card.tags.push(tc.key);
+      else card.tags.splice(idx, 1);
+      save();
+      renderModalTags(card, board);
+    };
+
+    row.appendChild(swatch);
+    row.appendChild(input);
+    pickerContainer.appendChild(row);
+  });
+
+  if (wasOpen) pickerContainer.classList.add('open');
+}
+
+function toggleTagPicker(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('tagPicker').classList.toggle('open');
+}
+
+document.addEventListener('click', (e) => {
+  const picker = document.getElementById('tagPicker');
+  if (picker.classList.contains('open') && !e.target.closest('#tagPicker') && !e.target.closest('#addTagBtn')) {
+    picker.classList.remove('open');
+  }
+});
+
+// ── RELATED CARDS ──
+
+function renderModalRelated(card, board) {
+  const container = document.getElementById('modalRelated');
+  container.innerHTML = '';
+  if (!card.related || card.related.length === 0) return;
+
+  card.related.forEach(relId => {
+    let relCard = null, relCol = null;
+    for (const c of board.columns) {
+      const found = c.cards.find(cd => cd.id === relId);
+      if (found) { relCard = found; relCol = c; break; }
+    }
+    if (!relCard) return;
+
+    const item = document.createElement('div');
+    item.className = 'related-card-item';
+    item.onclick = () => {
+      closeCardModal();
+      setTimeout(() => openCardModal(relCard.id), 100);
+    };
+
+    const title = document.createElement('span');
+    title.className = 'related-card-title';
+    title.textContent = relCard.title;
+
+    const col = document.createElement('span');
+    col.className = 'related-card-col';
+    col.textContent = relCol.title;
+
+    const remove = document.createElement('button');
+    remove.className = 'btn-icon related-card-remove';
+    remove.innerHTML = '×';
+    remove.onclick = (e) => {
+      e.stopPropagation();
+      unlinkCards(card, relCard);
+      save();
+      renderModalRelated(card, board);
+    };
+
+    item.appendChild(title);
+    item.appendChild(col);
+    item.appendChild(remove);
+    container.appendChild(item);
+  });
+}
+
+function toggleRelatedSearch() {
+  const wrap = document.getElementById('relatedSearchWrap');
+  wrap.classList.toggle('open');
+  if (wrap.classList.contains('open')) {
+    document.getElementById('relatedSearchInput').value = '';
+    document.getElementById('relatedSearchInput').focus();
+    filterRelatedSearch();
+  }
+}
+
+function filterRelatedSearch() {
+  const board = getBoard();
+  const card = getEditingCard();
+  if (!card) return;
+
+  const query = document.getElementById('relatedSearchInput').value.toLowerCase().trim();
+  const results = document.getElementById('relatedSearchResults');
+  results.innerHTML = '';
+
+  const existing = card.related || [];
+  let matches = [];
+
+  for (const col of board.columns) {
+    for (const c of col.cards) {
+      if (c.id === card.id) continue;
+      if (existing.includes(c.id)) continue;
+      if (query && !c.title.toLowerCase().includes(query)) continue;
+      matches.push({ card: c, colTitle: col.title });
+    }
+  }
+
+  if (matches.length === 0) {
+    results.classList.remove('has-results');
+    return;
+  }
+
+  results.classList.add('has-results');
+  matches.slice(0, 10).forEach(({ card: matchCard, colTitle }) => {
+    const div = document.createElement('div');
+    div.className = 'related-search-result';
+    div.onclick = () => {
+      linkCards(card, matchCard);
+      save();
+      renderModalRelated(card, board);
+      document.getElementById('relatedSearchInput').value = '';
+      filterRelatedSearch();
+    };
+
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = matchCard.title;
+
+    const colSpan = document.createElement('span');
+    colSpan.className = 'result-col';
+    colSpan.textContent = colTitle;
+
+    div.appendChild(titleSpan);
+    div.appendChild(colSpan);
+    results.appendChild(div);
+  });
+}
+
+function linkCards(cardA, cardB) {
+  if (!cardA.related) cardA.related = [];
+  if (!cardB.related) cardB.related = [];
+  if (!cardA.related.includes(cardB.id)) cardA.related.push(cardB.id);
+  if (!cardB.related.includes(cardA.id)) cardB.related.push(cardA.id);
+}
+
+function unlinkCards(cardA, cardB) {
+  if (cardA.related) cardA.related = cardA.related.filter(id => id !== cardB.id);
+  if (cardB.related) cardB.related = cardB.related.filter(id => id !== cardA.id);
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('relatedSearchWrap');
+  if (wrap.classList.contains('open') && !e.target.closest('#relatedSearchWrap') && !e.target.closest('#addRelatedBtn')) {
+    wrap.classList.remove('open');
+  }
+});
+
+// ── LINKS ──
+
+function renderModalLinks(card) {
+  const container = document.getElementById('modalLinks');
+  container.innerHTML = '';
+  if (!card.links) card.links = [];
+  card.links.forEach((url, i) => {
+    const div = document.createElement('div');
+    div.className = 'link-item';
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.textContent = prettifyUrl(url);
+    a.title = url;
+
+    const del = document.createElement('button');
+    del.className = 'btn-icon link-delete';
+    del.innerHTML = '×';
+    del.onclick = () => {
+      card.links.splice(i, 1);
+      save();
+      renderModalLinks(card);
+    };
+
+    div.appendChild(a);
+    div.appendChild(del);
+    container.appendChild(div);
+  });
+}
+
+function addLinkFromInput() {
+  const input = document.getElementById('newLinkInput');
+  const url = input.value.trim();
+  if (!url) return;
+  addLinkToCard(url);
+  input.value = '';
+  input.focus();
+}
+
+function addLinkToCard(url) {
+  const card = getEditingCard();
+  if (!card) return;
+  if (!card.links) card.links = [];
+  if (card.links.includes(url)) return;
+  card.links.push(url);
+  save();
+  renderModalLinks(card);
+}
+
+const GMAIL_SEARCH_PREFIX = 'https://mail.google.com/mail/u/0/#search/rfc822msgid:';
+
+function showGmailIdInput() {
+  document.getElementById('gmailIdRow').style.display = 'flex';
+  document.getElementById('gmailIdInput').value = '';
+  document.getElementById('gmailIdInput').focus();
+}
+
+function hideGmailIdInput() {
+  document.getElementById('gmailIdRow').style.display = 'none';
+}
+
+function addGmailThread() {
+  const input = document.getElementById('gmailIdInput');
+  let msgId = input.value.trim();
+  if (!msgId) return;
+  // Strip angle brackets if user pastes the full header format <id@domain>
+  msgId = msgId.replace(/^<|>$/g, '');
+  const url = GMAIL_SEARCH_PREFIX + encodeURIComponent(msgId);
+  addLinkToCard(url);
+  hideGmailIdInput();
+}
+
+function prettifyUrl(url) {
+  try {
+    const u = new URL(url);
+    let label = u.hostname.replace(/^www\./, '');
+    if (u.hostname.includes('mail.google.com')) label = '✉ Gmail thread';
+    else if (u.hostname.includes('docs.google.com')) label = '📄 Google Doc';
+    else if (u.hostname.includes('drive.google.com')) label = '📁 Google Drive';
+    if (u.pathname && u.pathname !== '/') label += u.pathname.slice(0, 30);
+    return label;
+  } catch {
+    return url.slice(0, 50);
+  }
+}
+
+// Auto-capture pasted URLs and images when card modal is open
+document.addEventListener('paste', (e) => {
+  if (!document.getElementById('cardModal').classList.contains('open')) return;
+  if (viewingArchivedIndex !== null) return;
+
+  // Check for pasted images first
+  const items = [...(e.clipboardData || window.clipboardData).items];
+  const imageItems = items.filter(item => item.type.startsWith('image/'));
+  if (imageItems.length > 0) {
+    e.preventDefault();
+    const files = imageItems.map(item => item.getAsFile()).filter(Boolean);
+    handleImageFiles(files);
+    return;
+  }
+
+  // Don't intercept text if user is pasting into an input/textarea
+  const active = document.activeElement;
+  const tag = active?.tagName?.toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+
+  const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+  if (isUrl(text)) {
+    e.preventDefault();
+    addLinkToCard(text);
+  }
+});
+
+function isUrl(str) {
+  try { const u = new URL(str); return u.protocol === 'http:' || u.protocol === 'https:'; }
+  catch { return false; }
+}
+
+// ── BOARD SETTINGS ──
+
+function openBoardSettings() {
+  const board = getBoard();
+  document.getElementById('boardNameInput').value = board.name;
+  const archiveLen = (board.archived || []).length;
+  document.getElementById('archiveCount').textContent = archiveLen ? `(${archiveLen})` : '';
+
+  const labelsContainer = document.getElementById('boardTagLabels');
+  labelsContainer.innerHTML = '';
+  TAG_COLORS.forEach(tc => {
+    const row = document.createElement('div');
+    row.className = 'tag-label-edit';
+    row.style.marginBottom = '4px';
+
+    const swatch = document.createElement('div');
+    swatch.className = 'tag-swatch';
+    swatch.style.background = tc.color;
+
+    const input = document.createElement('input');
+    input.placeholder = '';
+    input.value = (board.tagLabels && board.tagLabels[tc.key]) || '';
+    input.dataset.tagKey = tc.key;
+
+    row.appendChild(swatch);
+    row.appendChild(input);
+    labelsContainer.appendChild(row);
+  });
+
+  document.getElementById('boardSettingsModal').classList.add('open');
+}
+
+function closeBoardSettings() {
+  document.getElementById('boardSettingsModal').classList.remove('open');
+}
+
+function saveBoardSettings() {
+  const board = getBoard();
+  const name = document.getElementById('boardNameInput').value.trim();
+  if (name) board.name = name;
+
+  const inputs = document.querySelectorAll('#boardTagLabels input');
+  if (!board.tagLabels) board.tagLabels = {};
+  inputs.forEach(inp => {
+    board.tagLabels[inp.dataset.tagKey] = inp.value.trim();
+  });
+
+  save();
+  closeBoardSettings();
+  render();
+}
+
+// ── CONFIRM DIALOG ──
+
+function confirm(msg, onOk) {
+  const overlay = document.getElementById('confirmDialog');
+  document.getElementById('confirmMessage').textContent = msg;
+  overlay.classList.add('open');
+
+  const okBtn = document.getElementById('confirmOk');
+  const cancelBtn = document.getElementById('confirmCancel');
+
+  function cleanup() {
+    overlay.classList.remove('open');
+    okBtn.replaceWith(okBtn.cloneNode(true));
+    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+    document.getElementById('confirmCancel').onclick = () => cleanup();
+  }
+
+  document.getElementById('confirmOk').onclick = () => { cleanup(); onOk(); };
+  document.getElementById('confirmCancel').onclick = () => cleanup();
+}
+
+// Close modals on overlay click
+document.getElementById('cardModal').onclick = (e) => {
+  if (e.target === document.getElementById('cardModal')) closeCardModal();
+};
+document.getElementById('boardSettingsModal').onclick = (e) => {
+  if (e.target === document.getElementById('boardSettingsModal')) closeBoardSettings();
+};
+
+// Esc key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('confirmDialog').classList.contains('open')) return;
+    if (document.getElementById('archiveModal').classList.contains('open')) closeArchive();
+    else if (document.getElementById('cardModal').classList.contains('open')) closeCardModal();
+    else if (document.getElementById('boardSettingsModal').classList.contains('open')) closeBoardSettings();
+  }
+});
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ── TOUCH DRAG & DROP ──
+
+let touchDragCard = null;
+let touchDragClone = null;
+let touchStartCol = null;
+let touchOffsetX = 0;
+let touchOffsetY = 0;
+
+document.addEventListener('touchstart', (e) => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const touch = e.touches[0];
+  const rect = card.getBoundingClientRect();
+  touchOffsetX = touch.clientX - rect.left;
+  touchOffsetY = touch.clientY - rect.top;
+  touchDragCard = card;
+  touchStartCol = card.closest('.column-body')?.dataset.columnId;
+
+  // Long press to start drag
+  card._touchTimer = setTimeout(() => {
+    card.classList.add('dragging');
+    touchDragClone = card.cloneNode(true);
+    touchDragClone.style.position = 'fixed';
+    touchDragClone.style.width = rect.width + 'px';
+    touchDragClone.style.zIndex = '1000';
+    touchDragClone.style.pointerEvents = 'none';
+    touchDragClone.style.opacity = '0.8';
+    touchDragClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+    touchDragClone.style.top = (touch.clientY - touchOffsetY) + 'px';
+    touchDragClone.classList.remove('dragging');
+    document.body.appendChild(touchDragClone);
+  }, 200);
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (!touchDragClone) {
+    if (touchDragCard?._touchTimer) {
+      clearTimeout(touchDragCard._touchTimer);
+      touchDragCard._touchTimer = null;
+      touchDragCard = null;
+    }
+    return;
+  }
+  e.preventDefault();
+  const touch = e.touches[0];
+  touchDragClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+  touchDragClone.style.top = (touch.clientY - touchOffsetY) + 'px';
+
+  // Highlight drop target
+  document.querySelectorAll('.column-body').forEach(b => b.classList.remove('drag-over-zone'));
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const body = el?.closest('.column-body');
+  if (body) body.classList.add('drag-over-zone');
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+  if (touchDragCard?._touchTimer) {
+    clearTimeout(touchDragCard._touchTimer);
+    touchDragCard._touchTimer = null;
+  }
+  if (!touchDragClone || !touchDragCard) {
+    touchDragCard = null;
+    return;
+  }
+
+  const cloneRect = touchDragClone.getBoundingClientRect();
+  const centerX = cloneRect.left + cloneRect.width / 2;
+  const centerY = cloneRect.top + cloneRect.height / 2;
+  touchDragClone.style.display = 'none';
+  const el = document.elementFromPoint(centerX, centerY);
+  touchDragClone.style.display = '';
+
+  const targetBody = el?.closest('.column-body');
+  const toColId = targetBody?.dataset.columnId;
+  const cardId = touchDragCard.dataset.cardId;
+
+  if (toColId && cardId && touchStartCol) {
+    handleDrop(cardId, touchStartCol, toColId, targetBody);
+  }
+
+  touchDragCard.classList.remove('dragging');
+  document.querySelectorAll('.column-body').forEach(b => b.classList.remove('drag-over-zone'));
+  touchDragClone.remove();
+  touchDragClone = null;
+  touchDragCard = null;
+  touchStartCol = null;
+});
+
+// ── IMAGES ──
+
+const MAX_IMAGE_SIZE = 800;
+
+function resizeImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > MAX_IMAGE_SIZE || h > MAX_IMAGE_SIZE) {
+        if (w > h) { h = Math.round(h * MAX_IMAGE_SIZE / w); w = MAX_IMAGE_SIZE; }
+        else { w = Math.round(w * MAX_IMAGE_SIZE / h); h = MAX_IMAGE_SIZE; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleImageFiles(files) {
+  if (!editingCardId) return;
+  const board = getBoard();
+  let card;
+  for (const col of board.columns) {
+    card = col.cards.find(c => c.id === editingCardId);
+    if (card) break;
+  }
+  if (!card) return;
+  if (!card.images) card.images = [];
+
+  const imageFiles = [...files].filter(f => f.type.startsWith('image/'));
+  if (imageFiles.length === 0) return;
+
+  let processed = 0;
+  imageFiles.forEach(file => {
+    resizeImage(file, async (dataUrl) => {
+      try {
+        const url = currentUser ? await uploadImageToStorage(dataUrl) : dataUrl;
+        card.images.push(url);
+      } catch (err) {
+        card.images.push(dataUrl);
+      }
+      processed++;
+      if (processed >= imageFiles.length) {
+        save();
+        renderModalImages(card);
+      }
+    });
+  });
+  document.getElementById('imageFileInput').value = '';
+}
+
+function renderModalImages(card, readOnly) {
+  const container = document.getElementById('modalImages');
+  container.innerHTML = '';
+
+  (card.images || []).forEach((src, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'image-thumb-wrap';
+    const img = document.createElement('img');
+    img.src = src;
+    img.onclick = (e) => { e.stopPropagation(); openLightbox(src); };
+    wrap.appendChild(img);
+
+    if (!readOnly) {
+      const removeBtn = document.createElement('div');
+      removeBtn.className = 'image-thumb-remove';
+      removeBtn.textContent = '×';
+      removeBtn.onclick = (e) => {
+        e.stopPropagation();
+        card.images.splice(i, 1);
+        save();
+        renderModalImages(card);
+      };
+      wrap.appendChild(removeBtn);
+    }
+    container.appendChild(wrap);
+  });
+
+  if (!readOnly) {
+    const addBtn = document.createElement('div');
+    addBtn.className = 'add-image-btn';
+    addBtn.textContent = '+';
+    addBtn.onclick = () => document.getElementById('imageFileInput').click();
+    container.appendChild(addBtn);
+  }
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
+}
+
+// ── IMAGE DROP ON MODAL ──
+
+(function() {
+  const modal = document.querySelector('#cardModal .modal');
+  let dragCounter = 0;
+
+  modal.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    if (viewingArchivedIndex !== null) return;
+    if (!e.dataTransfer.types.includes('Files')) return;
+    dragCounter++;
+    modal.classList.add('drag-over');
+  });
+
+  modal.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      modal.classList.remove('drag-over');
+    }
+  });
+
+  modal.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+
+  modal.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    modal.classList.remove('drag-over');
+    if (viewingArchivedIndex !== null) return;
+    const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+    if (files.length > 0) handleImageFiles(files);
+  });
+})();
+
+// ── FIREBASE AUTH & SYNC ──
+
+function signIn() {
+  fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+}
+
+function signOutUser() {
+  fbAuth.signOut();
+}
+
+function saveToFirestore() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const syncEl = document.getElementById('syncIndicator');
+    syncEl.textContent = 'saving...';
+    syncEl.classList.remove('synced');
+    db.collection('users').doc(currentUser.uid).set({
+      boards: data.boards,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).then(() => {
+      syncEl.textContent = 'synced';
+      syncEl.classList.add('synced');
+    }).catch(() => {
+      syncEl.textContent = 'offline';
+      syncEl.classList.remove('synced');
+    });
+  }, 500);
+}
+
+function subscribeToFirestore(uid) {
+  if (firestoreUnsub) firestoreUnsub();
+  firestoreUnsub = db.collection('users').doc(uid).onSnapshot(doc => {
+    if (!doc.exists) {
+      migrateToFirestore();
+      return;
+    }
+    const remote = doc.data();
+    data.boards = remote.boards || [];
+    if (!currentBoardId || !data.boards.find(b => b.id === currentBoardId)) {
+      currentBoardId = data.boards[0]?.id;
+    }
+    data.currentBoardId = currentBoardId;
+    localStorage.setItem('monoline_data', JSON.stringify(data));
+    if (!editingCardId) render();
+  });
+}
+
+async function uploadImageToStorage(base64DataUrl) {
+  const id = uid();
+  const ref = fbStorage.ref(`users/${currentUser.uid}/images/${id}.jpg`);
+  const res = await fetch(base64DataUrl);
+  const blob = await res.blob();
+  const snapshot = await ref.put(blob);
+  return snapshot.ref.getDownloadURL();
+}
+
+async function migrateToFirestore() {
+  const syncEl = document.getElementById('syncIndicator');
+  syncEl.textContent = 'migrating...';
+  for (const board of data.boards) {
+    for (const col of (board.columns || [])) {
+      for (const card of (col.cards || [])) {
+        await migrateCardImages(card);
+      }
+    }
+    for (const card of (board.archived || [])) {
+      await migrateCardImages(card);
+    }
+  }
+  saveToFirestore();
+  save();
+}
+
+async function migrateCardImages(card) {
+  if (!card.images || card.images.length === 0) return;
+  card.images = await Promise.all(card.images.map(async (img) => {
+    if (img.startsWith('data:')) {
+      try { return await uploadImageToStorage(img); }
+      catch { return img; }
+    }
+    return img;
+  }));
+}
+
+fbAuth.onAuthStateChanged(user => {
+  currentUser = user;
+  const signInBtn = document.getElementById('signInBtn');
+  const userInfo = document.getElementById('userInfo');
+  const syncEl = document.getElementById('syncIndicator');
+
+  if (user) {
+    signInBtn.style.display = 'none';
+    userInfo.style.display = 'flex';
+    document.getElementById('userAvatar').src = user.photoURL || '';
+    syncEl.textContent = 'connecting...';
+    subscribeToFirestore(user.uid);
+  } else {
+    signInBtn.style.display = '';
+    userInfo.style.display = 'none';
+    syncEl.textContent = '';
+    syncEl.classList.remove('synced');
+    if (firestoreUnsub) { firestoreUnsub(); firestoreUnsub = null; }
+    data = loadData();
+    currentBoardId = data.currentBoardId;
+    render();
+  }
+});
+
+// ── INIT ──
+render();
+</script>
+</body>
+</html>
