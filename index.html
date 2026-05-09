@@ -1344,17 +1344,50 @@
 
   .sign-in-btn:hover { background: var(--gray-100); }
 
-  .user-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
+  .user-menu {
+    position: relative;
   }
 
   .user-avatar {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: border-color 0.1s;
+  }
+
+  .user-avatar:hover {
+    border-color: var(--black);
+  }
+
+  .user-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    background: var(--white);
+    border: var(--border);
+    min-width: 140px;
+    z-index: 200;
+  }
+
+  .user-dropdown.open {
+    display: block;
+  }
+
+  .user-dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .user-dropdown-item:hover {
+    background: var(--gray-100);
   }
 
   .sync-indicator {
@@ -1388,9 +1421,12 @@
     <span class="sync-indicator" id="syncIndicator"></span>
     <button class="btn btn-sm" onclick="openBoardSettings()">⚙</button>
     <button class="sign-in-btn" id="signInBtn" onclick="signIn()" style="display:none">Sign in</button>
-    <div class="user-info" id="userInfo" style="display:none">
-      <img class="user-avatar" id="userAvatar" />
-      <button class="btn btn-sm" onclick="signOutUser()">Sign out</button>
+    <div class="user-menu" id="userMenu" style="display:none">
+      <img class="user-avatar" id="userAvatar" onclick="toggleUserDropdown()" />
+      <div class="user-dropdown" id="userDropdown">
+        <button class="user-dropdown-item" onclick="openBoardSettings(); closeUserDropdown()">Settings</button>
+        <button class="user-dropdown-item" onclick="signOutUser(); closeUserDropdown()">Sign out</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2603,6 +2639,9 @@ document.addEventListener('click', (e) => {
   if (picker.classList.contains('open') && !e.target.closest('#tagPicker') && !e.target.closest('#addTagBtn')) {
     picker.classList.remove('open');
   }
+  if (!e.target.closest('.user-menu')) {
+    closeUserDropdown();
+  }
 });
 
 // ── RELATED CARDS ──
@@ -3188,6 +3227,14 @@ function signOutUser() {
   fbAuth.signOut();
 }
 
+function toggleUserDropdown() {
+  document.getElementById('userDropdown').classList.toggle('open');
+}
+
+function closeUserDropdown() {
+  document.getElementById('userDropdown').classList.remove('open');
+}
+
 function saveToFirestore() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
@@ -3265,18 +3312,18 @@ async function migrateCardImages(card) {
 fbAuth.onAuthStateChanged(user => {
   currentUser = user;
   const signInBtn = document.getElementById('signInBtn');
-  const userInfo = document.getElementById('userInfo');
+  const userMenu = document.getElementById('userMenu');
   const syncEl = document.getElementById('syncIndicator');
 
   if (user) {
     signInBtn.style.display = 'none';
-    userInfo.style.display = 'flex';
+    userMenu.style.display = '';
     document.getElementById('userAvatar').src = user.photoURL || '';
     syncEl.textContent = 'connecting...';
     subscribeToFirestore(user.uid);
   } else {
     signInBtn.style.display = '';
-    userInfo.style.display = 'none';
+    userMenu.style.display = 'none';
     syncEl.textContent = '';
     syncEl.classList.remove('synced');
     if (firestoreUnsub) { firestoreUnsub(); firestoreUnsub = null; }
