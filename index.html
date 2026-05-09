@@ -1419,7 +1419,7 @@
   </div>
   <div class="topbar-right">
     <span class="sync-indicator" id="syncIndicator"></span>
-    <button class="btn btn-sm" onclick="openBoardSettings()">⚙</button>
+    <button class="btn btn-sm" id="settingsBtn" onclick="openBoardSettings()">⚙</button>
     <button class="sign-in-btn" id="signInBtn" onclick="signIn()" style="display:none">Sign in</button>
     <div class="user-menu" id="userMenu" style="display:none">
       <img class="user-avatar" id="userAvatar" onclick="toggleUserDropdown()" />
@@ -3315,14 +3315,18 @@ fbAuth.onAuthStateChanged(user => {
   const userMenu = document.getElementById('userMenu');
   const syncEl = document.getElementById('syncIndicator');
 
+  const settingsBtn = document.getElementById('settingsBtn');
+
   if (user) {
     signInBtn.style.display = 'none';
+    settingsBtn.style.display = 'none';
     userMenu.style.display = '';
     document.getElementById('userAvatar').src = user.photoURL || '';
     syncEl.textContent = 'connecting...';
     subscribeToFirestore(user.uid);
   } else {
     signInBtn.style.display = '';
+    settingsBtn.style.display = '';
     userMenu.style.display = 'none';
     syncEl.textContent = '';
     syncEl.classList.remove('synced');
