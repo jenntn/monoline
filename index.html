@@ -224,6 +224,14 @@
     background: var(--gray-100);
   }
 
+  .column.col-dragging {
+    opacity: 0.4;
+  }
+
+  .column.col-drag-over {
+    border-left: 3px solid var(--black);
+  }
+
   .column-header {
     padding: 10px 16px;
     border-bottom: var(--border);
@@ -1346,6 +1354,9 @@
 
   .user-menu {
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .user-avatar {
@@ -1418,10 +1429,10 @@
     </div>
   </div>
   <div class="topbar-right">
-    <span class="sync-indicator" id="syncIndicator"></span>
     <button class="btn btn-sm" id="settingsBtn" onclick="openBoardSettings()">⚙</button>
     <button class="sign-in-btn" id="signInBtn" onclick="signIn()" style="display:none">Sign in</button>
     <div class="user-menu" id="userMenu" style="display:none">
+      <span class="sync-indicator" id="syncIndicator"></span>
       <img class="user-avatar" id="userAvatar" onclick="toggleUserDropdown()" />
       <div class="user-dropdown" id="userDropdown">
         <button class="user-dropdown-item" onclick="openBoardSettings(); closeUserDropdown()">Settings</button>
@@ -1446,7 +1457,7 @@
       <!-- Notes -->
       <div class="modal-section">
         <div class="modal-section-label">Notes</div>
-        <textarea class="modal-notes" id="modalNotes" placeholder="Write anything..."></textarea>
+        <textarea class="modal-notes" id="modalNotes" placeholder="Write anything..." oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
       </div>
 
       <!-- Images -->
@@ -1716,9 +1727,37 @@ function renderColumn(col, board) {
   div.className = 'column';
   div.dataset.columnId = col.id;
 
-  // Header
+  div.ondragover = (e) => {
+    if (!e.dataTransfer.types.includes('column-id')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('.column').forEach(c => c.classList.remove('col-drag-over'));
+    div.classList.add('col-drag-over');
+  };
+  div.ondragleave = (e) => {
+    if (!e.dataTransfer.types.includes('column-id')) return;
+    if (!div.contains(e.relatedTarget)) div.classList.remove('col-drag-over');
+  };
+  div.ondrop = (e) => {
+    const dragColId = e.dataTransfer.getData('column-id');
+    if (!dragColId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    document.querySelectorAll('.column').forEach(c => c.classList.remove('col-drag-over'));
+    moveColumn(dragColId, col.id);
+  };
+
+  // Header (draggable for column reorder)
   const header = document.createElement('div');
   header.className = 'column-header';
+  header.draggable = true;
+  header.ondragstart = (e) => {
+    if (e.target.isContentEditable) { e.preventDefault(); return; }
+    e.dataTransfer.setData('column-id', col.id);
+    e.dataTransfer.effectAllowed = 'move';
+    requestAnimationFrame(() => div.classList.add('col-dragging'));
+  };
+  header.ondragend = () => div.classList.remove('col-dragging');
 
   const title = document.createElement('span');
   title.className = 'column-title';
@@ -2033,6 +2072,18 @@ function createCard(columnId, title, index) {
   render();
 }
 
+function moveColumn(fromColId, toColId) {
+  if (fromColId === toColId) return;
+  const board = getBoard();
+  const fromIdx = board.columns.findIndex(c => c.id === fromColId);
+  const toIdx = board.columns.findIndex(c => c.id === toColId);
+  if (fromIdx === -1 || toIdx === -1) return;
+  const [col] = board.columns.splice(fromIdx, 1);
+  board.columns.splice(toIdx, 0, col);
+  save();
+  render();
+}
+
 function addColumn() {
   const board = getBoard();
   board.columns.push({
@@ -2128,7 +2179,10 @@ function openCardModal(cardId) {
   if (!card) return;
 
   document.getElementById('modalTitle').value = card.title;
-  document.getElementById('modalNotes').value = card.notes || '';
+  const notesEl = document.getElementById('modalNotes');
+  notesEl.value = card.notes || '';
+  notesEl.style.height = 'auto';
+  notesEl.style.height = notesEl.scrollHeight + 'px';
   document.getElementById('modalColumnInfo').textContent = `in "${col.title}"`;
 
   const moveSelect = document.getElementById('moveToSelect');
