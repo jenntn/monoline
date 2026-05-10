@@ -580,6 +580,39 @@
     color: var(--gray-500);
   }
 
+  .due-date-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .due-date-input {
+    border: var(--border-light);
+    padding: 6px 10px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .due-date-input:focus {
+    border-color: var(--black);
+  }
+
+  .due-date-clear {
+    font-size: 16px;
+    padding: 2px 6px;
+    color: var(--gray-500);
+  }
+
+  .due-date-indicator {
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+
+  .due-date-indicator.overdue {
+    color: var(--tag-red);
+    font-weight: 600;
+  }
+
   .modal-notes {
     width: 100%;
     min-height: 80px;
@@ -1454,6 +1487,15 @@
       <button class="modal-close" onclick="closeCardModal()">×</button>
     </div>
     <div class="modal-body">
+      <!-- Due Date -->
+      <div class="modal-section">
+        <div class="modal-section-label">Due Date</div>
+        <div class="due-date-row">
+          <input type="date" class="due-date-input" id="modalDueDate" onchange="saveDueDate(this.value)" />
+          <button class="btn btn-sm due-date-clear" id="dueDateClear" onclick="clearDueDate()" style="display:none">×</button>
+        </div>
+      </div>
+
       <!-- Notes -->
       <div class="modal-section">
         <div class="modal-section-label">Notes</div>
@@ -1910,6 +1952,16 @@ function renderCard(card, col, board) {
   const indicators = document.createElement('div');
   indicators.className = 'card-indicators';
 
+  if (card.dueDate) {
+    const span = document.createElement('span');
+    span.className = 'due-date-indicator';
+    const today = new Date().toISOString().slice(0, 10);
+    if (card.dueDate < today) span.classList.add('overdue');
+    const d = new Date(card.dueDate + 'T00:00:00');
+    span.textContent = `📅 ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+    indicators.appendChild(span);
+  }
+
   if (card.images && card.images.length > 0) {
     const span = document.createElement('span');
     span.className = 'image-indicator';
@@ -2154,10 +2206,11 @@ function openCardModal(cardId) {
   modalEl.classList.remove('archived');
   document.getElementById('modalTitle').readOnly = false;
   document.getElementById('modalNotes').readOnly = false;
+  document.getElementById('modalDueDate').readOnly = false;
   viewingArchivedIndex = null;
 
   // Restore editing controls that may have been hidden
-  document.querySelectorAll('.add-subtask-row, .add-link-row, .gmail-thread-btn, #gmailIdRow, .paste-hint, .image-paste-hint, #addTagBtn, #tagPicker, #relatedSearchWrap, #addRelatedBtn, #moveToSelect').forEach(el => {
+  document.querySelectorAll('.add-subtask-row, .add-link-row, .gmail-thread-btn, #gmailIdRow, .paste-hint, .image-paste-hint, #addTagBtn, #tagPicker, #relatedSearchWrap, #addRelatedBtn, #moveToSelect, #dueDateClear').forEach(el => {
     el.style.display = el.dataset.prevDisplay || '';
     delete el.dataset.prevDisplay;
   });
@@ -2206,6 +2259,9 @@ function openCardModal(cardId) {
     save();
   }
 
+  document.getElementById('modalDueDate').value = card.dueDate || '';
+  document.getElementById('dueDateClear').style.display = card.dueDate ? '' : 'none';
+
   renderModalImages(card);
   renderModalLinks(card);
   renderModalSubtasks(card);
@@ -2226,6 +2282,25 @@ function closeCardModal() {
   editingCardId = null;
   document.getElementById('cardModal').classList.remove('open');
   render();
+}
+
+function saveDueDate(val) {
+  if (!editingCardId) return;
+  const board = getBoard();
+  for (const col of board.columns) {
+    const card = col.cards.find(c => c.id === editingCardId);
+    if (card) {
+      card.dueDate = val || null;
+      document.getElementById('dueDateClear').style.display = val ? '' : 'none';
+      save();
+      break;
+    }
+  }
+}
+
+function clearDueDate() {
+  document.getElementById('modalDueDate').value = '';
+  saveDueDate(null);
 }
 
 function saveCardFromModal() {
@@ -2385,6 +2460,8 @@ function openArchivedCard(index) {
   document.getElementById('modalTitle').readOnly = true;
   document.getElementById('modalNotes').value = card.notes || '';
   document.getElementById('modalNotes').readOnly = true;
+  document.getElementById('modalDueDate').value = card.dueDate || '';
+  document.getElementById('modalDueDate').readOnly = true;
 
   const date = card.archivedAt ? new Date(card.archivedAt).toLocaleDateString() : '';
   document.getElementById('modalColumnInfo').textContent = 'archived ' + date + (card.archivedFrom ? ' · was in "' + card.archivedFrom + '"' : '');
@@ -2451,7 +2528,7 @@ function openArchivedCard(index) {
   renderModalRelated(card, board);
 
   // Hide editing controls
-  document.querySelectorAll('.add-subtask-row, .add-link-row, .gmail-thread-btn, #gmailIdRow, .paste-hint, .image-paste-hint, #addTagBtn, #tagPicker, #relatedSearchWrap, #addRelatedBtn, #moveToSelect').forEach(el => {
+  document.querySelectorAll('.add-subtask-row, .add-link-row, .gmail-thread-btn, #gmailIdRow, .paste-hint, .image-paste-hint, #addTagBtn, #tagPicker, #relatedSearchWrap, #addRelatedBtn, #moveToSelect, #dueDateClear').forEach(el => {
     el.dataset.prevDisplay = el.style.display;
     el.style.display = 'none';
   });
@@ -2480,7 +2557,7 @@ function closeArchivedCard() {
   document.getElementById('modalNotes').readOnly = false;
 
   // Restore hidden editing controls
-  document.querySelectorAll('.add-subtask-row, .add-link-row, .gmail-thread-btn, #gmailIdRow, .paste-hint, .image-paste-hint, #addTagBtn, #tagPicker, #relatedSearchWrap, #addRelatedBtn, #moveToSelect').forEach(el => {
+  document.querySelectorAll('.add-subtask-row, .add-link-row, .gmail-thread-btn, #gmailIdRow, .paste-hint, .image-paste-hint, #addTagBtn, #tagPicker, #relatedSearchWrap, #addRelatedBtn, #moveToSelect, #dueDateClear').forEach(el => {
     el.style.display = el.dataset.prevDisplay || '';
     delete el.dataset.prevDisplay;
   });
