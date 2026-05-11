@@ -129,11 +129,13 @@
   }
 
   .board-dropdown-item {
-    padding: 10px 14px;
+    padding: 0;
     font-size: 14px;
     text-align: left;
     border-bottom: 1px solid var(--gray-200);
     font-weight: normal;
+    display: flex;
+    align-items: center;
   }
 
   .board-dropdown-item:hover {
@@ -146,6 +148,43 @@
 
   .board-dropdown-item:last-child {
     border-bottom: none;
+  }
+
+  .board-dropdown-name {
+    flex: 1;
+    padding: 10px 14px;
+    cursor: pointer;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .board-dropdown-edit {
+    padding: 8px 10px;
+    font-size: 13px;
+    color: var(--gray-400);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.1s;
+    flex-shrink: 0;
+  }
+
+  .board-dropdown-item:hover .board-dropdown-edit {
+    opacity: 1;
+  }
+
+  .board-dropdown-edit:hover {
+    color: var(--black);
+  }
+
+  .board-dropdown-rename {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1.5px solid var(--black);
+    margin: 4px;
+    outline: none;
   }
 
   .board-dropdown-new {
@@ -1558,12 +1597,12 @@
       </div>
     </div>
     <div class="modal-footer">
-      <div class="modal-column-info" id="modalColumnInfo" style="display:none"></div>
-      <select class="move-to-select" id="moveToSelect" onchange="moveCardToColumn(this.value)"></select>
       <div style="display:flex;gap:6px">
         <button class="btn btn-sm" onclick="archiveCurrentCard()">Archive</button>
         <button class="btn btn-sm btn-danger" onclick="deleteCurrentCard()">Delete</button>
       </div>
+      <div class="modal-column-info" id="modalColumnInfo" style="display:none"></div>
+      <select class="move-to-select" id="moveToSelect" onchange="moveCardToColumn(this.value)"></select>
     </div>
   </div>
 </div>
@@ -1710,16 +1749,49 @@ function renderBoardSelector() {
   dropdown.innerHTML = '';
 
   data.boards.forEach(b => {
-    const btn = document.createElement('button');
-    btn.className = 'board-dropdown-item' + (b.id === currentBoardId ? ' active' : '');
-    btn.textContent = b.name;
-    btn.onclick = () => {
+    const row = document.createElement('div');
+    row.className = 'board-dropdown-item' + (b.id === currentBoardId ? ' active' : '');
+
+    const name = document.createElement('span');
+    name.className = 'board-dropdown-name';
+    name.textContent = b.name;
+    name.onclick = () => {
       currentBoardId = b.id;
       save();
       closeBoardDropdown();
       render();
     };
-    dropdown.appendChild(btn);
+
+    const editBtn = document.createElement('span');
+    editBtn.className = 'board-dropdown-edit';
+    editBtn.textContent = '✎';
+    editBtn.title = 'Rename';
+    editBtn.onclick = (e) => {
+      e.stopPropagation();
+      row.innerHTML = '';
+      const input = document.createElement('input');
+      input.className = 'board-dropdown-rename';
+      input.value = b.name;
+      input.onkeydown = (ev) => {
+        if (ev.key === 'Enter') input.blur();
+        if (ev.key === 'Escape') { renderBoardSelector(); }
+      };
+      input.onblur = () => {
+        const val = input.value.trim();
+        if (val && val !== b.name) {
+          b.name = val;
+          save();
+        }
+        renderBoardSelector();
+      };
+      row.appendChild(input);
+      input.focus();
+      input.select();
+    };
+
+    row.appendChild(name);
+    row.appendChild(editBtn);
+    dropdown.appendChild(row);
   });
 
   const newBtn = document.createElement('button');
@@ -2703,8 +2775,9 @@ function renderModalTags(card, board) {
         pill.className = 'tag-pill color-only';
         pill.innerHTML = '<span class="tag-remove">×</span>';
       }
-      pill.querySelector('.tag-remove').onclick = () => {
-        card.tags.splice(card.tags.indexOf(t), 1);
+      pill.querySelector('.tag-remove').onclick = (e) => {
+        e.stopPropagation();
+        card.tags = card.tags.filter(tag => tag !== t);
         save();
         renderModalTags(card, board);
       };
@@ -2743,11 +2816,12 @@ function renderModalTags(card, board) {
     };
     input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
 
-    swatch.onclick = () => {
+    swatch.onclick = (e) => {
+      e.stopPropagation();
       if (!card.tags) card.tags = [];
       const idx = card.tags.indexOf(tc.key);
       if (idx === -1) card.tags.push(tc.key);
-      else card.tags.splice(idx, 1);
+      else card.tags = card.tags.filter(tag => tag !== tc.key);
       save();
       renderModalTags(card, board);
     };
