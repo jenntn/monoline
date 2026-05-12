@@ -1413,6 +1413,40 @@
 
 
 
+  /* ── COUNTDOWN ── */
+  .countdown-display {
+    font-size: 12px;
+    color: var(--gray-500);
+    white-space: nowrap;
+  }
+
+  .countdown-settings-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .countdown-settings-row input[type="date"],
+  .countdown-settings-row input[type="text"] {
+    border: var(--border-light);
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  .countdown-settings-row input[type="text"] {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .countdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
   /* ── AUTH ── */
   .sign-in-btn {
     border: var(--border);
@@ -1501,6 +1535,7 @@
     </div>
   </div>
   <div class="topbar-right">
+    <span class="countdown-display" id="countdownDisplay"></span>
     <button class="btn btn-sm" id="settingsBtn" onclick="openBoardSettings()">⚙</button>
     <button class="sign-in-btn" id="signInBtn" onclick="signIn()" style="display:none">Sign in</button>
     <div class="user-menu" id="userMenu" style="display:none">
@@ -1624,6 +1659,18 @@
         <div id="boardTagLabels"></div>
       </div>
       <div class="modal-section">
+        <div class="modal-section-label">Countdown</div>
+        <label class="countdown-toggle">
+          <input type="checkbox" id="countdownEnabled" />
+          Show countdown in top bar
+        </label>
+        <div class="countdown-settings-row" style="margin-top:6px">
+          <input type="date" id="countdownDate" />
+          <span style="font-size:13px;color:var(--gray-500)">till</span>
+          <input type="text" id="countdownLabel" placeholder="e.g. the wedding" />
+        </div>
+      </div>
+      <div class="modal-section">
         <button class="btn btn-sm" onclick="closeBoardSettings();openArchive()">View Archived Cards <span id="archiveCount" style="color:var(--gray-400)"></span></button>
       </div>
     </div>
@@ -1691,6 +1738,10 @@ const TAG_COLORS = [
   { key: 'pink', color: '#ec4899' },
 ];
 
+function getAllTagColors(board) {
+  return [...TAG_COLORS, ...((board && board.customTags) || [])];
+}
+
 let data = loadData();
 let currentBoardId = data.currentBoardId;
 let editingCardId = null;
@@ -1739,6 +1790,7 @@ function getBoard() {
 function render() {
   renderBoardSelector();
   renderBoard();
+  renderCountdown();
 }
 
 function renderBoardSelector() {
@@ -2002,7 +2054,7 @@ function renderCard(card, col, board) {
     const tagsDiv = document.createElement('div');
     tagsDiv.className = 'card-tags';
     card.tags.forEach(t => {
-      const tc = TAG_COLORS.find(c => c.key === t);
+      const tc = getAllTagColors(board).find(c => c.key === t);
       if (!tc) return;
       const span = document.createElement('span');
       span.className = 'tag';
@@ -2579,7 +2631,7 @@ function openArchivedCard(index) {
   const selectedContainer = document.getElementById('modalTagsSelected');
   selectedContainer.innerHTML = '';
   (card.tags || []).forEach(t => {
-    const tc = TAG_COLORS.find(c => c.key === t);
+    const tc = getAllTagColors(board).find(c => c.key === t);
     if (!tc) return;
     const pill = document.createElement('span');
     pill.style.background = tc.color;
@@ -2761,9 +2813,10 @@ function renderModalTags(card, board) {
   pickerContainer.innerHTML = '';
 
   // Show selected tags as pills
+  const allColors = getAllTagColors(board);
   if (card.tags && card.tags.length > 0) {
     card.tags.forEach(t => {
-      const tc = TAG_COLORS.find(c => c.key === t);
+      const tc = allColors.find(c => c.key === t);
       if (!tc) return;
       const pill = document.createElement('span');
       pill.style.background = tc.color;
@@ -2789,7 +2842,7 @@ function renderModalTags(card, board) {
   selectedContainer.appendChild(addTagBtn);
 
   // Vertical list picker (same layout as board settings)
-  TAG_COLORS.forEach(tc => {
+  allColors.forEach(tc => {
     const isSelected = card.tags && card.tags.includes(tc.key);
     const row = document.createElement('div');
     row.className = 'tag-label-edit';
@@ -2828,8 +2881,49 @@ function renderModalTags(card, board) {
 
     row.appendChild(swatch);
     row.appendChild(input);
+
+    // Delete button for custom colors
+    if (tc.custom) {
+      const del = document.createElement('span');
+      del.textContent = '×';
+      del.style.cssText = 'cursor:pointer;color:var(--gray-400);font-size:16px;padding:0 4px;';
+      del.title = 'Remove color';
+      del.onclick = (e) => {
+        e.stopPropagation();
+        board.customTags = (board.customTags || []).filter(ct => ct.key !== tc.key);
+        card.tags = (card.tags || []).filter(tag => tag !== tc.key);
+        if (board.tagLabels) delete board.tagLabels[tc.key];
+        save();
+        renderModalTags(card, board);
+      };
+      row.appendChild(del);
+    }
+
     pickerContainer.appendChild(row);
   });
+
+  // Add custom color row
+  const addRow = document.createElement('div');
+  addRow.className = 'tag-label-edit';
+  addRow.style.marginBottom = '4px';
+  const colorInput = document.createElement('input');
+  colorInput.type = 'color';
+  colorInput.value = '#888888';
+  colorInput.style.cssText = 'width:28px;height:28px;padding:0;border:1.5px dashed var(--gray-300);cursor:pointer;background:none;flex-shrink:0;';
+  const addLabel = document.createElement('span');
+  addLabel.textContent = '+ Add color';
+  addLabel.style.cssText = 'font-size:13px;color:var(--gray-400);cursor:pointer;';
+  addLabel.onclick = () => colorInput.click();
+  colorInput.onchange = () => {
+    if (!board.customTags) board.customTags = [];
+    const key = 'custom_' + uid();
+    board.customTags.push({ key, color: colorInput.value, custom: true });
+    save();
+    renderModalTags(card, board);
+  };
+  addRow.appendChild(colorInput);
+  addRow.appendChild(addLabel);
+  pickerContainer.appendChild(addRow);
 
   if (wasOpen) pickerContainer.classList.add('open');
 }
@@ -3105,7 +3199,7 @@ function openBoardSettings() {
 
   const labelsContainer = document.getElementById('boardTagLabels');
   labelsContainer.innerHTML = '';
-  TAG_COLORS.forEach(tc => {
+  getAllTagColors(board).forEach(tc => {
     const row = document.createElement('div');
     row.className = 'tag-label-edit';
     row.style.marginBottom = '4px';
@@ -3124,6 +3218,11 @@ function openBoardSettings() {
     labelsContainer.appendChild(row);
   });
 
+  const cd = board.countdown || {};
+  document.getElementById('countdownEnabled').checked = !!cd.enabled;
+  document.getElementById('countdownDate').value = cd.date || '';
+  document.getElementById('countdownLabel').value = cd.label || '';
+
   document.getElementById('boardSettingsModal').classList.add('open');
 }
 
@@ -3141,6 +3240,12 @@ function saveBoardSettings() {
   inputs.forEach(inp => {
     board.tagLabels[inp.dataset.tagKey] = inp.value.trim();
   });
+
+  board.countdown = {
+    enabled: document.getElementById('countdownEnabled').checked,
+    date: document.getElementById('countdownDate').value || null,
+    label: document.getElementById('countdownLabel').value.trim() || null,
+  };
 
   save();
   closeBoardSettings();
@@ -3421,6 +3526,31 @@ function closeLightbox() {
     if (files.length > 0) handleImageFiles(files);
   });
 })();
+
+// ── COUNTDOWN ──
+
+function renderCountdown() {
+  const el = document.getElementById('countdownDisplay');
+  const board = getBoard();
+  const cd = board?.countdown;
+  if (!cd || !cd.enabled || !cd.date) {
+    el.textContent = '';
+    return;
+  }
+  const target = new Date(cd.date + 'T00:00:00');
+  const now = new Date();
+  const diff = target - now;
+  if (diff <= 0) {
+    el.textContent = cd.label ? `🎉 ${cd.label}!` : '🎉 Countdown complete!';
+    return;
+  }
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const timeStr = `${days}d ${hours}h`;
+  el.textContent = cd.label ? `${timeStr} till ${cd.label}` : `Countdown: ${timeStr}`;
+}
+
+setInterval(renderCountdown, 60000);
 
 // ── FIREBASE AUTH & SYNC ──
 
