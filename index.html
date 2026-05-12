@@ -3607,13 +3607,15 @@ function subscribeToFirestore(uid) {
       return;
     }
     const remote = doc.data();
+    // Skip if modal is open — local references would go stale
+    if (editingCardId) return;
     data.boards = remote.boards || [];
     if (!currentBoardId || !data.boards.find(b => b.id === currentBoardId)) {
       currentBoardId = data.boards[0]?.id;
     }
     data.currentBoardId = currentBoardId;
     localStorage.setItem('monoline_data', JSON.stringify(data));
-    if (!editingCardId) render();
+    render();
   });
 }
 
