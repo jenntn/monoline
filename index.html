@@ -2869,12 +2869,16 @@ function renderModalTags(card, board) {
     };
     input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
 
-    swatch.onclick = (e) => {
+    swatch.onmousedown = (e) => {
+      e.preventDefault();
       e.stopPropagation();
       if (!card.tags) card.tags = [];
       const idx = card.tags.indexOf(tc.key);
       if (idx === -1) card.tags.push(tc.key);
       else card.tags = card.tags.filter(tag => tag !== tc.key);
+      // Save label from input if it's focused
+      if (!board.tagLabels) board.tagLabels = {};
+      board.tagLabels[tc.key] = input.value.trim();
       save();
       renderModalTags(card, board);
     };
