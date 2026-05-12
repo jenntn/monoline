@@ -3201,12 +3201,7 @@ function isUrl(str) {
 
 // ── BOARD SETTINGS ──
 
-function openBoardSettings() {
-  const board = getBoard();
-  document.getElementById('boardNameInput').value = board.name;
-  const archiveLen = (board.archived || []).length;
-  document.getElementById('archiveCount').textContent = archiveLen ? `(${archiveLen})` : '';
-
+function renderSettingsTags(board) {
   const labelsContainer = document.getElementById('boardTagLabels');
   labelsContainer.innerHTML = '';
   getAllTagColors(board).forEach(tc => {
@@ -3225,8 +3220,73 @@ function openBoardSettings() {
 
     row.appendChild(swatch);
     row.appendChild(input);
+
+    // Delete button for custom colors
+    if (tc.custom) {
+      const del = document.createElement('span');
+      del.textContent = '×';
+      del.style.cssText = 'cursor:pointer;color:var(--gray-400);font-size:16px;padding:0 4px;';
+      del.title = 'Remove color';
+      del.onclick = (e) => {
+        e.stopPropagation();
+        board.customTags = (board.customTags || []).filter(ct => ct.key !== tc.key);
+        // Remove tag from all cards in all columns
+        (board.columns || []).forEach(col => {
+          (col.cards || []).forEach(card => {
+            if (card.tags) card.tags = card.tags.filter(tag => tag !== tc.key);
+          });
+        });
+        // Remove from archived cards too
+        (board.archived || []).forEach(card => {
+          if (card.tags) card.tags = card.tags.filter(tag => tag !== tc.key);
+        });
+        if (board.tagLabels) delete board.tagLabels[tc.key];
+        save();
+        renderSettingsTags(board);
+      };
+      row.appendChild(del);
+    }
+
     labelsContainer.appendChild(row);
   });
+
+  // Add custom color row
+  const addRow = document.createElement('div');
+  addRow.className = 'tag-label-edit';
+  addRow.style.marginBottom = '4px';
+  const colorInput = document.createElement('input');
+  colorInput.type = 'color';
+  colorInput.value = '#888888';
+  colorInput.style.cssText = 'width:28px;height:28px;padding:0;border:1.5px dashed var(--gray-300);cursor:pointer;background:none;flex-shrink:0;';
+  const addLabel = document.createElement('span');
+  addLabel.textContent = '+ Add color';
+  addLabel.style.cssText = 'font-size:13px;color:var(--gray-400);cursor:pointer;';
+  addLabel.onclick = () => colorInput.click();
+  colorInput.onchange = () => {
+    // Save any in-progress label edits first
+    const inputs = labelsContainer.querySelectorAll('input[data-tag-key]');
+    if (!board.tagLabels) board.tagLabels = {};
+    inputs.forEach(inp => {
+      board.tagLabels[inp.dataset.tagKey] = inp.value.trim();
+    });
+    if (!board.customTags) board.customTags = [];
+    const key = 'custom_' + uid();
+    board.customTags.push({ key, color: colorInput.value, custom: true });
+    save();
+    renderSettingsTags(board);
+  };
+  addRow.appendChild(colorInput);
+  addRow.appendChild(addLabel);
+  labelsContainer.appendChild(addRow);
+}
+
+function openBoardSettings() {
+  const board = getBoard();
+  document.getElementById('boardNameInput').value = board.name;
+  const archiveLen = (board.archived || []).length;
+  document.getElementById('archiveCount').textContent = archiveLen ? `(${archiveLen})` : '';
+
+  renderSettingsTags(board);
 
   const cd = board.countdown || {};
   document.getElementById('countdownEnabled').checked = !!cd.enabled;
@@ -3245,7 +3305,7 @@ function saveBoardSettings() {
   const name = document.getElementById('boardNameInput').value.trim();
   if (name) board.name = name;
 
-  const inputs = document.querySelectorAll('#boardTagLabels input');
+  const inputs = document.querySelectorAll('#boardTagLabels input[data-tag-key]');
   if (!board.tagLabels) board.tagLabels = {};
   inputs.forEach(inp => {
     board.tagLabels[inp.dataset.tagKey] = inp.value.trim();
