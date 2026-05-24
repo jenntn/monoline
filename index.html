@@ -1380,6 +1380,8 @@
     flex-direction: column;
     font-size: 13px;
     transition: background 0.15s;
+    overflow: hidden;
+    min-width: 0;
   }
 
   .calendar-day.cal-drop-over {
@@ -1973,10 +1975,10 @@
       </button>
       <div class="board-dropdown" id="boardDropdown"></div>
     </div>
-  </div>
-  <div class="topbar-right">
     <button class="topbar-btn" id="viewToggle" onclick="toggleView()" title="Switch to calendar view">📅</button>
     <button class="topbar-btn" id="filterToggle" onclick="toggleFilterBar()" title="Filter cards">⌕</button>
+  </div>
+  <div class="topbar-right">
     <button class="topbar-btn reset-widths-btn" id="resetWidthsBtn" onclick="resetColumnWidths()" title="Reset column widths">⇔</button>
     <span class="countdown-display" id="countdownDisplay"></span>
     <button class="topbar-btn" id="settingsBtn" onclick="openBoardSettings()">⚙</button>
