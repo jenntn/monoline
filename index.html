@@ -86,6 +86,197 @@
     gap: 10px;
   }
 
+  .filter-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    border-bottom: var(--border);
+    background: var(--gray-50);
+    position: sticky;
+    top: 49px;
+    z-index: 99;
+    flex-wrap: wrap;
+  }
+
+  .filter-bar.open {
+    display: flex;
+  }
+
+  .filter-search {
+    font-size: 14px;
+    padding: 5px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    font-family: inherit;
+    background: var(--white);
+    min-width: 160px;
+    flex-shrink: 1;
+  }
+
+  .filter-search:focus {
+    outline: 1px solid var(--black);
+  }
+
+  .filter-tag-wrap {
+    position: relative;
+  }
+
+  .filter-tag-btn {
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    font-family: inherit;
+    background: var(--white);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .filter-tag-btn:hover {
+    border-color: var(--black);
+  }
+
+  .filter-tag-btn .arrow {
+    font-size: 10px;
+    color: var(--gray-400);
+  }
+
+  .filter-tag-btn .active-count {
+    background: var(--black);
+    color: var(--white);
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+
+  .filter-tag-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 200;
+    min-width: 180px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  .filter-tag-dropdown.open {
+    display: block;
+  }
+
+  .filter-tag-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .filter-tag-option:hover {
+    background: var(--gray-50);
+  }
+
+  .filter-tag-option .ft-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .filter-tag-option .ft-check {
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--black);
+  }
+
+  .filter-selected-pills {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .filter-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: var(--white);
+    cursor: pointer;
+  }
+
+  .filter-pill:hover {
+    opacity: 0.8;
+  }
+
+  .filter-clear {
+    font-size: 12px;
+    color: var(--gray-400);
+    cursor: pointer;
+    margin-left: 4px;
+    white-space: nowrap;
+  }
+
+  .filter-clear:hover {
+    color: var(--black);
+  }
+
+  .topbar-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--border);
+    background: var(--white);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    padding: 0;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .topbar-btn:hover {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .topbar-btn.active {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .col-resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 10;
+  }
+
+  .col-resize-handle:hover,
+  .col-resize-handle.dragging {
+    background: var(--gray-300);
+  }
+
+  .reset-widths-btn {
+    display: none;
+  }
+
   .logo {
     font-size: 16px;
     font-weight: bold;
@@ -256,13 +447,13 @@
 
   /* ── COLUMN ── */
   .column {
-    min-width: 280px;
-    max-width: 320px;
+    min-width: 180px;
     flex: 1;
     border-right: var(--border);
     display: flex;
     flex-direction: column;
     background: var(--white);
+    position: relative;
   }
 
   .column.drag-over {
@@ -326,9 +517,10 @@
     padding: 8px;
     overflow-y: auto;
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 6px;
     min-height: 60px;
+    align-content: flex-start;
   }
 
   .column-body.drag-over-zone {
@@ -343,6 +535,11 @@
     cursor: grab;
     position: relative;
     transition: box-shadow 0.1s;
+    width: 100%;
+    max-width: 280px;
+    min-width: 180px;
+    flex: 1 1 220px;
+    box-sizing: border-box;
   }
 
   .card:hover {
@@ -502,6 +699,8 @@
     justify-content: center;
     margin: -3px 0;
     z-index: 5;
+    width: 100%;
+    flex-basis: 100%;
   }
 
   .insert-line::before,
@@ -681,7 +880,7 @@
 
   .subtask-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     padding: 4px 0;
     border-bottom: 1px solid var(--gray-100);
@@ -693,6 +892,7 @@
     accent-color: var(--black);
     cursor: pointer;
     flex-shrink: 0;
+    margin-top: 3px;
   }
 
   .subtask-item .subtask-text {
@@ -701,6 +901,11 @@
     border: none;
     padding: 2px 0;
     background: transparent;
+    resize: none;
+    overflow: hidden;
+    font-family: inherit;
+    line-height: 1.4;
+    min-height: 22px;
   }
 
   .subtask-item .subtask-text:focus {
@@ -1074,6 +1279,16 @@
       gap: 8px;
     }
 
+    .filter-bar {
+      padding: 8px 12px;
+      top: auto;
+    }
+
+    .filter-search {
+      min-width: 120px;
+      flex: 1;
+    }
+
     .board {
       min-height: calc(100vh - 60px);
     }
@@ -1089,6 +1304,221 @@
 
     .modal-overlay {
       padding: 20px 8px;
+    }
+  }
+
+  /* ── CALENDAR VIEW ── */
+  .calendar-container {
+    display: none;
+    min-height: calc(100vh - 49px);
+  }
+
+  .calendar-container.open {
+    display: flex;
+  }
+
+  .calendar-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+  }
+
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 5;
+  }
+
+  .calendar-header button {
+    background: none;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+  }
+
+  .calendar-header button:hover {
+    border-color: var(--black);
+  }
+
+  .calendar-month-label {
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    flex: 1;
+  }
+
+  .calendar-day-header {
+    padding: 6px 8px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    border-bottom: var(--border);
+  }
+
+  .calendar-day {
+    border-right: var(--border);
+    border-bottom: var(--border);
+    min-height: 100px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+
+  .calendar-day.cal-drop-over {
+    background: #e0f2fe;
+  }
+
+  .calendar-day:nth-child(7n) {
+    border-right: none;
+  }
+
+  .calendar-day.other-month {
+    background: var(--gray-50);
+    color: var(--gray-300);
+  }
+
+  .calendar-day.today {
+    background: #fffde7;
+  }
+
+  .calendar-day-num {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: inherit;
+  }
+
+  .calendar-day.today .calendar-day-num {
+    background: var(--black);
+    color: var(--white);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .calendar-card {
+    padding: 3px 5px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+  }
+
+  .calendar-card:hover {
+    background: var(--gray-100);
+  }
+
+  .calendar-card .cal-tag-dots {
+    display: inline;
+    margin-right: 3px;
+  }
+
+  .calendar-card .cal-tag-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 1px;
+  }
+
+  .calendar-card.overdue {
+    border-color: #ef4444;
+    color: #ef4444;
+  }
+
+  .calendar-sidebar {
+    width: 220px;
+    border-left: var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+    overflow-y: auto;
+  }
+
+  .calendar-sidebar-header {
+    padding: 12px 14px;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: var(--border);
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .calendar-sidebar-list {
+    padding: 8px;
+    flex: 1;
+    overflow-y: auto;
+    transition: background 0.15s;
+  }
+
+  .calendar-sidebar-list.cal-drop-over {
+    background: #e0f2fe;
+  }
+
+  .calendar-sidebar-card {
+    padding: 8px 10px;
+    margin-bottom: 4px;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .calendar-sidebar-card:hover {
+    background: var(--gray-100);
+  }
+
+  .calendar-sidebar-card .sidebar-col-label {
+    font-size: 11px;
+    color: var(--gray-400);
+    margin-top: 2px;
+  }
+
+
+  @media (max-width: 600px) {
+    .calendar-sidebar {
+      display: none;
+    }
+
+    .calendar-container.open {
+      flex-direction: column;
+    }
+
+    .calendar-day {
+      min-height: 60px;
+    }
+
+    .calendar-sidebar-mobile {
+      display: block;
+      border-top: var(--border);
+      padding: 8px;
     }
   }
 
@@ -1455,14 +1885,18 @@
 
   /* ── AUTH ── */
   .sign-in-btn {
+    height: 36px;
     border: var(--border);
-    padding: 6px 12px;
+    padding: 0 12px;
     font-size: 13px;
     font-weight: 500;
     background: var(--white);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s, color 0.1s;
   }
 
-  .sign-in-btn:hover { background: var(--gray-100); }
+  .sign-in-btn:hover { background: var(--black); color: var(--white); }
 
   .user-menu {
     position: relative;
@@ -1541,8 +1975,11 @@
     </div>
   </div>
   <div class="topbar-right">
+    <button class="topbar-btn" id="viewToggle" onclick="toggleView()" title="Switch to calendar view">📅</button>
+    <button class="topbar-btn" id="filterToggle" onclick="toggleFilterBar()" title="Filter cards">⌕</button>
+    <button class="topbar-btn reset-widths-btn" id="resetWidthsBtn" onclick="resetColumnWidths()" title="Reset column widths">⇔</button>
     <span class="countdown-display" id="countdownDisplay"></span>
-    <button class="btn btn-sm" id="settingsBtn" onclick="openBoardSettings()">⚙</button>
+    <button class="topbar-btn" id="settingsBtn" onclick="openBoardSettings()">⚙</button>
     <button class="sign-in-btn" id="signInBtn" onclick="signIn()" style="display:none">Sign in</button>
     <div class="user-menu" id="userMenu" style="display:none">
       <span class="sync-indicator" id="syncIndicator"></span>
@@ -1555,8 +1992,35 @@
   </div>
 </div>
 
+<!-- FILTER BAR -->
+<div class="filter-bar" id="filterBar">
+  <input class="filter-search" id="filterSearch" type="text" placeholder="Search cards..." oninput="applyFilters()" />
+  <div class="filter-tag-wrap" id="filterTagWrap">
+    <button class="filter-tag-btn" onclick="toggleFilterTagDropdown(event)">Tags <span class="arrow">▼</span></button>
+    <div class="filter-tag-dropdown" id="filterTagDropdown"></div>
+  </div>
+  <div class="filter-selected-pills" id="filterSelectedPills"></div>
+  <span class="filter-clear" id="filterClear" onclick="clearFilters()" style="display:none">Clear</span>
+</div>
+
 <!-- BOARD AREA -->
 <div class="board" id="board"></div>
+
+<!-- CALENDAR VIEW -->
+<div class="calendar-container" id="calendarContainer">
+  <div class="calendar-main">
+    <div class="calendar-header">
+      <button onclick="calendarNav(-1)">‹</button>
+      <span class="calendar-month-label" id="calendarMonthLabel"></span>
+      <button onclick="calendarNav(1)">›</button>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+  <div class="calendar-sidebar">
+    <div class="calendar-sidebar-header">Unscheduled</div>
+    <div class="calendar-sidebar-list" id="calendarSidebar"></div>
+  </div>
+</div>
 
 <!-- CARD DETAIL MODAL -->
 <div class="modal-overlay" id="cardModal">
@@ -1791,12 +2255,481 @@ function getBoard() {
   return data.boards.find(b => b.id === currentBoardId) || data.boards[0];
 }
 
+// ── COLUMN RESIZE ──
+
+function startColumnResize(e, colEl, colId) {
+  e.preventDefault();
+  e.stopPropagation();
+  const startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+  const startWidth = colEl.getBoundingClientRect().width;
+  const handle = colEl.querySelector('.col-resize-handle');
+  handle.classList.add('dragging');
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+
+  function onMove(ev) {
+    const clientX = ev.type === 'touchmove' ? ev.touches[0].clientX : ev.clientX;
+    const newWidth = Math.max(180, startWidth + (clientX - startX));
+    colEl.style.flex = 'none';
+    colEl.style.width = newWidth + 'px';
+  }
+
+  function onUp() {
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+
+    // Save width
+    const board = getBoard();
+    if (!board.columnWidths) board.columnWidths = {};
+    board.columnWidths[colId] = Math.round(colEl.getBoundingClientRect().width);
+    save();
+    updateResetBtn();
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend', onUp);
+}
+
+function resetColumnWidths() {
+  const board = getBoard();
+  if (board) {
+    delete board.columnWidths;
+    save();
+  }
+  document.querySelectorAll('.column').forEach(col => {
+    col.style.flex = '';
+    col.style.width = '';
+  });
+  updateResetBtn();
+}
+
+function updateResetBtn() {
+  const board = getBoard();
+  const btn = document.getElementById('resetWidthsBtn');
+  const hasCustom = board && board.columnWidths && Object.keys(board.columnWidths).length > 0;
+  btn.style.display = hasCustom ? '' : 'none';
+}
+
+// ── CALENDAR VIEW ──
+
+let currentView = 'board';
+let calendarMonth = new Date().getMonth();
+let calendarYear = new Date().getFullYear();
+
+function toggleView() {
+  currentView = currentView === 'board' ? 'calendar' : 'board';
+  const boardEl = document.getElementById('board');
+  const calEl = document.getElementById('calendarContainer');
+  const btn = document.getElementById('viewToggle');
+  if (currentView === 'calendar') {
+    boardEl.style.display = 'none';
+    calEl.classList.add('open');
+    btn.title = 'Switch to board view';
+    btn.textContent = '▤';
+    renderCalendar();
+  } else {
+    boardEl.style.display = '';
+    calEl.classList.remove('open');
+    btn.title = 'Switch to calendar view';
+    btn.textContent = '📅';
+  }
+}
+
+function calendarNav(dir) {
+  calendarMonth += dir;
+  if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+  if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const board = getBoard();
+  if (!board) return;
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calendarMonthLabel').textContent = monthNames[calendarMonth] + ' ' + calendarYear;
+
+  // Gather all cards with and without due dates
+  const allCards = [];
+  (board.columns || []).forEach(col => {
+    (col.cards || []).forEach(card => {
+      allCards.push({ card, col });
+    });
+  });
+
+  const datedCards = allCards.filter(c => c.card.dueDate);
+  const undatedCards = allCards.filter(c => !c.card.dueDate);
+
+  // Build calendar grid
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+
+  // Day headers
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  dayNames.forEach(d => {
+    const dh = document.createElement('div');
+    dh.className = 'calendar-day-header';
+    dh.textContent = d;
+    grid.appendChild(dh);
+  });
+
+  // Get first day of month and total days
+  const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+  const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(calendarYear, calendarMonth, 0).getDate();
+
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  // Index dated cards by date string
+  const cardsByDate = {};
+  datedCards.forEach(({ card, col }) => {
+    const d = card.dueDate;
+    if (!cardsByDate[d]) cardsByDate[d] = [];
+    cardsByDate[d].push({ card, col });
+  });
+
+  // Previous month padding
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-day other-month';
+    const num = document.createElement('div');
+    num.className = 'calendar-day-num';
+    num.textContent = prevMonthDays - i;
+    dayEl.appendChild(num);
+    grid.appendChild(dayEl);
+  }
+
+  // Current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-day';
+    dayEl.dataset.date = dateStr;
+    if (dateStr === todayStr) dayEl.classList.add('today');
+
+    // Drop target
+    dayEl.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; dayEl.classList.add('cal-drop-over'); };
+    dayEl.ondragleave = (e) => { if (!dayEl.contains(e.relatedTarget)) dayEl.classList.remove('cal-drop-over'); };
+    dayEl.ondrop = (e) => {
+      e.preventDefault();
+      dayEl.classList.remove('cal-drop-over');
+      const cardId = e.dataTransfer.getData('cal-card-id');
+      if (cardId) calendarDropCard(cardId, dateStr);
+    };
+
+    const num = document.createElement('div');
+    num.className = 'calendar-day-num';
+    num.textContent = d;
+    dayEl.appendChild(num);
+
+    // Render cards for this date
+    const dayCards = cardsByDate[dateStr] || [];
+    dayCards.forEach(({ card, col }) => {
+      dayEl.appendChild(renderCalendarCard(card, col, board, dateStr < todayStr));
+    });
+
+    grid.appendChild(dayEl);
+  }
+
+  // Next month padding to fill last row
+  const totalCells = firstDay + daysInMonth;
+  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let i = 1; i <= remaining; i++) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-day other-month';
+    const num = document.createElement('div');
+    num.className = 'calendar-day-num';
+    num.textContent = i;
+    dayEl.appendChild(num);
+    grid.appendChild(dayEl);
+  }
+
+  // Render unscheduled sidebar
+  const sidebar = document.getElementById('calendarSidebar');
+  sidebar.innerHTML = '';
+  // Make sidebar a drop target (unschedule cards)
+  sidebar.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; sidebar.classList.add('cal-drop-over'); };
+  sidebar.ondragleave = (e) => { if (!sidebar.contains(e.relatedTarget)) sidebar.classList.remove('cal-drop-over'); };
+  sidebar.ondrop = (e) => {
+    e.preventDefault();
+    sidebar.classList.remove('cal-drop-over');
+    const cardId = e.dataTransfer.getData('cal-card-id');
+    if (cardId) calendarDropCard(cardId, null);
+  };
+
+  undatedCards.forEach(({ card, col }) => {
+    const el = document.createElement('div');
+    el.className = 'calendar-sidebar-card';
+    el.draggable = true;
+    el.ondragstart = (e) => {
+      e.dataTransfer.setData('cal-card-id', card.id);
+      e.dataTransfer.effectAllowed = 'move';
+      requestAnimationFrame(() => el.style.opacity = '0.4');
+    };
+    el.ondragend = () => el.style.opacity = '';
+    el.textContent = card.title;
+    const colLabel = document.createElement('div');
+    colLabel.className = 'sidebar-col-label';
+    colLabel.textContent = col.title;
+    el.appendChild(colLabel);
+    el.onclick = () => openCardFromCalendar(card, col, board);
+    sidebar.appendChild(el);
+  });
+}
+
+function renderCalendarCard(card, col, board, isOverdue) {
+  const el = document.createElement('div');
+  el.className = 'calendar-card';
+  if (isOverdue) el.classList.add('overdue');
+
+  // Tag dots
+  if (card.tags && card.tags.length > 0) {
+    const dots = document.createElement('span');
+    dots.className = 'cal-tag-dots';
+    const allColors = getAllTagColors(board);
+    card.tags.slice(0, 3).forEach(t => {
+      const tc = allColors.find(c => c.key === t);
+      if (tc) {
+        const dot = document.createElement('span');
+        dot.className = 'cal-tag-dot';
+        dot.style.background = tc.color;
+        dots.appendChild(dot);
+      }
+    });
+    el.appendChild(dots);
+  }
+
+  el.draggable = true;
+  el.ondragstart = (e) => {
+    e.stopPropagation();
+    e.dataTransfer.setData('cal-card-id', card.id);
+    e.dataTransfer.effectAllowed = 'move';
+    requestAnimationFrame(() => el.style.opacity = '0.4');
+  };
+  el.ondragend = () => el.style.opacity = '';
+
+  el.appendChild(document.createTextNode(card.title));
+  el.title = card.title + ' (' + col.title + ')';
+  el.onclick = () => openCardFromCalendar(card, col, board);
+  return el;
+}
+
+function calendarDropCard(cardId, dateStr) {
+  const board = getBoard();
+  if (!board) return;
+  for (const col of board.columns) {
+    const card = col.cards.find(c => c.id === cardId);
+    if (card) {
+      card.dueDate = dateStr || null;
+      save();
+      renderCalendar();
+      return;
+    }
+  }
+}
+
+function openCardFromCalendar(card, col, board) {
+  openCardModal(card.id);
+}
+
+// ── FILTER ──
+
+let activeTagFilters = [];
+let filterQuery = '';
+
+function toggleFilterBar() {
+  const bar = document.getElementById('filterBar');
+  const btn = document.getElementById('filterToggle');
+  const isOpen = bar.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+  if (isOpen) {
+    renderFilterTags();
+    document.getElementById('filterSearch').focus();
+  } else {
+    clearFilters();
+  }
+}
+
+function toggleFilterTagDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('filterTagDropdown');
+  const isOpen = dd.classList.toggle('open');
+  if (isOpen) {
+    renderFilterTagDropdown();
+    // Close on outside click
+    const close = (ev) => {
+      if (!document.getElementById('filterTagWrap').contains(ev.target)) {
+        dd.classList.remove('open');
+        document.removeEventListener('click', close);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+}
+
+function renderFilterTagDropdown() {
+  const board = getBoard();
+  if (!board) return;
+  const dd = document.getElementById('filterTagDropdown');
+  dd.innerHTML = '';
+  getAllTagColors(board).forEach(tc => {
+    const isActive = activeTagFilters.includes(tc.key);
+    const opt = document.createElement('div');
+    opt.className = 'filter-tag-option';
+    const swatch = document.createElement('span');
+    swatch.className = 'ft-swatch';
+    swatch.style.background = tc.color;
+    const label = document.createElement('span');
+    label.textContent = (board.tagLabels && board.tagLabels[tc.key]) || tc.key;
+    opt.appendChild(swatch);
+    opt.appendChild(label);
+    if (isActive) {
+      const check = document.createElement('span');
+      check.className = 'ft-check';
+      check.textContent = '✓';
+      opt.appendChild(check);
+    }
+    opt.onclick = (e) => {
+      e.stopPropagation();
+      const idx = activeTagFilters.indexOf(tc.key);
+      if (idx === -1) activeTagFilters.push(tc.key);
+      else activeTagFilters.splice(idx, 1);
+      renderFilterTagDropdown();
+      renderFilterPills();
+      updateFilterTagBtn();
+      applyFilters();
+    };
+    dd.appendChild(opt);
+  });
+}
+
+function renderFilterPills() {
+  const board = getBoard();
+  if (!board) return;
+  const container = document.getElementById('filterSelectedPills');
+  container.innerHTML = '';
+  const allColors = getAllTagColors(board);
+  activeTagFilters.forEach(key => {
+    const tc = allColors.find(c => c.key === key);
+    if (!tc) return;
+    const pill = document.createElement('span');
+    pill.className = 'filter-pill';
+    pill.style.background = tc.color;
+    const label = (board.tagLabels && board.tagLabels[key]) || key;
+    pill.textContent = label;
+    pill.title = 'Click to remove';
+    pill.onclick = () => {
+      activeTagFilters = activeTagFilters.filter(k => k !== key);
+      renderFilterPills();
+      renderFilterTagDropdown();
+      updateFilterTagBtn();
+      applyFilters();
+    };
+    container.appendChild(pill);
+  });
+}
+
+function updateFilterTagBtn() {
+  const btn = document.querySelector('.filter-tag-btn');
+  const count = activeTagFilters.length;
+  if (count > 0) {
+    btn.innerHTML = 'Tags <span class="active-count">' + count + '</span> <span class="arrow">▼</span>';
+  } else {
+    btn.innerHTML = 'Tags <span class="arrow">▼</span>';
+  }
+}
+
+function renderFilterTags() {
+  renderFilterPills();
+  updateFilterTagBtn();
+}
+
+function applyFilters() {
+  filterQuery = (document.getElementById('filterSearch').value || '').trim().toLowerCase();
+  const hasFilters = filterQuery || activeTagFilters.length > 0;
+  document.getElementById('filterClear').style.display = hasFilters ? '' : 'none';
+
+  const board = getBoard();
+  if (!board) return;
+
+  document.querySelectorAll('.card').forEach(cardEl => {
+    const cardId = cardEl.dataset.cardId;
+    let card = null;
+    for (const col of board.columns) {
+      card = col.cards.find(c => c.id === cardId);
+      if (card) break;
+    }
+    if (!card) return;
+
+    let show = true;
+    // Tag filter: card must have ALL selected tags
+    if (activeTagFilters.length > 0) {
+      const cardTags = card.tags || [];
+      show = activeTagFilters.every(t => cardTags.includes(t));
+    }
+    // Keyword filter: match title, notes, subtask text, or tag labels
+    if (show && filterQuery) {
+      const titleMatch = (card.title || '').toLowerCase().includes(filterQuery);
+      const notesMatch = (card.notes || '').toLowerCase().includes(filterQuery);
+      const subtaskMatch = (card.subtasks || []).some(st => (st.text || '').toLowerCase().includes(filterQuery));
+      const tagLabelMatch = (card.tags || []).some(t => {
+        const label = (board.tagLabels && board.tagLabels[t]) || '';
+        return label.toLowerCase().includes(filterQuery);
+      });
+      show = titleMatch || notesMatch || subtaskMatch || tagLabelMatch;
+    }
+    cardEl.style.display = show ? '' : 'none';
+  });
+
+  // Update column counts to reflect visible cards
+  document.querySelectorAll('.column').forEach(colEl => {
+    const visibleCards = colEl.querySelectorAll('.card:not([style*="display: none"])').length;
+    const countEl = colEl.querySelector('.column-count');
+    if (countEl) countEl.textContent = visibleCards;
+  });
+}
+
+function clearFilters() {
+  activeTagFilters = [];
+  filterQuery = '';
+  document.getElementById('filterSearch').value = '';
+  document.getElementById('filterClear').style.display = 'none';
+  renderFilterTags();
+  // Show all cards again
+  document.querySelectorAll('.card').forEach(c => c.style.display = '');
+  // Restore column counts
+  const board = getBoard();
+  if (board) {
+    document.querySelectorAll('.column').forEach(colEl => {
+      const colId = colEl.dataset.columnId;
+      const col = board.columns.find(c => c.id === colId);
+      const countEl = colEl.querySelector('.column-count');
+      if (countEl && col) countEl.textContent = col.cards.length;
+    });
+  }
+}
+
 // ── RENDER ──
 
 function render() {
   renderBoardSelector();
   renderBoard();
   renderCountdown();
+  updateResetBtn();
+  if (currentView === 'calendar') renderCalendar();
+  // Re-apply filters after render if filter bar is open
+  if (document.getElementById('filterBar').classList.contains('open')) {
+    renderFilterTags();
+    applyFilters();
+  }
 }
 
 function renderBoardSelector() {
@@ -2007,8 +2940,23 @@ function renderColumn(col, board) {
   addBtn.textContent = '+ Add card';
   addBtn.onclick = () => showInlineAdd(body, col, addBtn, col.cards.length);
 
+  // Resize handle
+  const resizeHandle = document.createElement('div');
+  resizeHandle.className = 'col-resize-handle';
+  resizeHandle.onmousedown = (e) => startColumnResize(e, div, col.id);
+  resizeHandle.ontouchstart = (e) => startColumnResize(e, div, col.id);
+
   div.appendChild(body);
   div.appendChild(addBtn);
+  div.appendChild(resizeHandle);
+
+  // Restore saved width
+  const savedWidth = board && board.columnWidths && board.columnWidths[col.id];
+  if (savedWidth) {
+    div.style.flex = 'none';
+    div.style.width = savedWidth + 'px';
+  }
+
   return div;
 }
 
@@ -2767,16 +3715,20 @@ function renderModalSubtasks(card) {
       renderModalSubtasks(card);
     };
 
-    const text = document.createElement('input');
+    const text = document.createElement('textarea');
     text.className = 'subtask-text';
+    text.rows = 1;
     text.value = st.text;
+    const autoSize = () => { text.style.height = 'auto'; text.style.height = text.scrollHeight + 'px'; };
     text.onblur = () => {
       st.text = text.value.trim();
       save();
     };
     text.onkeydown = (e) => {
-      if (e.key === 'Enter') text.blur();
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); text.blur(); }
     };
+    text.oninput = autoSize;
+    requestAnimationFrame(autoSize);
 
     const del = document.createElement('button');
     del.className = 'btn-icon subtask-delete';
