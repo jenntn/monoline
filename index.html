@@ -1310,7 +1310,8 @@
   /* ── CALENDAR VIEW ── */
   .calendar-container {
     display: none;
-    min-height: calc(100vh - 49px);
+    height: calc(100vh - 49px);
+    overflow: hidden;
   }
 
   .calendar-container.open {
@@ -1321,7 +1322,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: auto;
+    overflow: hidden;
+    min-width: 0;
   }
 
   .calendar-header {
@@ -1330,10 +1332,9 @@
     justify-content: space-between;
     padding: 12px 20px;
     border-bottom: var(--border);
-    position: sticky;
-    top: 0;
     background: var(--white);
     z-index: 5;
+    flex-shrink: 0;
   }
 
   .calendar-header button {
@@ -1359,6 +1360,7 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     flex: 1;
+    overflow-y: auto;
   }
 
   .calendar-day-header {
@@ -1369,6 +1371,10 @@
     text-transform: uppercase;
     color: var(--gray-400);
     border-bottom: var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 4;
   }
 
   .calendar-day {
@@ -1454,13 +1460,30 @@
     color: #ef4444;
   }
 
+  .calendar-countdown-marker {
+    padding: 3px 6px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--black);
+    color: var(--white);
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+
+  .calendar-day.countdown-day {
+    outline: 2px solid var(--black);
+    outline-offset: -2px;
+  }
+
   .calendar-sidebar {
     width: 220px;
     border-left: var(--border);
     display: flex;
     flex-direction: column;
     background: var(--white);
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   .calendar-sidebar-header {
@@ -1471,6 +1494,7 @@
     color: var(--gray-400);
     text-transform: uppercase;
     letter-spacing: 1px;
+    flex-shrink: 0;
   }
 
   .calendar-sidebar-list {
@@ -2012,9 +2036,13 @@
 <div class="calendar-container" id="calendarContainer">
   <div class="calendar-main">
     <div class="calendar-header">
-      <button onclick="calendarNav(-1)">‹</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button onclick="calendarNav(-1)">‹</button>
+        <button onclick="calendarNav(1)">›</button>
+        <button onclick="calendarToday()">Today</button>
+      </div>
       <span class="calendar-month-label" id="calendarMonthLabel"></span>
-      <button onclick="calendarNav(1)">›</button>
+      <div style="width:1px"></div>
     </div>
     <div class="calendar-grid" id="calendarGrid"></div>
   </div>
@@ -2351,6 +2379,13 @@ function calendarNav(dir) {
   renderCalendar();
 }
 
+function calendarToday() {
+  const now = new Date();
+  calendarMonth = now.getMonth();
+  calendarYear = now.getFullYear();
+  renderCalendar();
+}
+
 function renderCalendar() {
   const board = getBoard();
   if (!board) return;
@@ -2409,6 +2444,10 @@ function renderCalendar() {
     grid.appendChild(dayEl);
   }
 
+  // Countdown date
+  const cd = board.countdown || {};
+  const countdownDate = (cd.enabled && cd.date) ? cd.date : null;
+
   // Current month days
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -2416,6 +2455,7 @@ function renderCalendar() {
     dayEl.className = 'calendar-day';
     dayEl.dataset.date = dateStr;
     if (dateStr === todayStr) dayEl.classList.add('today');
+    if (dateStr === countdownDate) dayEl.classList.add('countdown-day');
 
     // Drop target
     dayEl.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; dayEl.classList.add('cal-drop-over'); };
@@ -2431,6 +2471,14 @@ function renderCalendar() {
     num.className = 'calendar-day-num';
     num.textContent = d;
     dayEl.appendChild(num);
+
+    // Countdown marker
+    if (dateStr === countdownDate) {
+      const marker = document.createElement('div');
+      marker.className = 'calendar-countdown-marker';
+      marker.textContent = cd.label ? '★ ' + cd.label : '★ Countdown';
+      dayEl.appendChild(marker);
+    }
 
     // Render cards for this date
     const dayCards = cardsByDate[dateStr] || [];
