@@ -46,8 +46,10 @@
     color: var(--black);
     font-size: 15px;
     line-height: 1.4;
-    overflow-x: auto;
-    min-height: 100vh;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
   button, input, textarea, select {
@@ -68,10 +70,9 @@
     justify-content: space-between;
     padding: 12px 20px;
     border-bottom: var(--border);
-    position: sticky;
-    top: 0;
     background: var(--white);
     z-index: 100;
+    flex-shrink: 0;
   }
 
   .topbar-left {
@@ -93,10 +94,9 @@
     padding: 8px 20px;
     border-bottom: var(--border);
     background: var(--gray-50);
-    position: sticky;
-    top: 49px;
     z-index: 99;
     flex-wrap: wrap;
+    flex-shrink: 0;
   }
 
   .filter-bar.open {
@@ -284,6 +284,10 @@
     text-transform: uppercase;
   }
 
+  .logo.hidden {
+    display: none;
+  }
+
   .board-selector {
     position: relative;
   }
@@ -441,7 +445,8 @@
     display: flex;
     gap: 0;
     padding: 0;
-    min-height: calc(100vh - 49px);
+    flex: 1;
+    overflow-x: auto;
     align-items: stretch;
   }
 
@@ -474,10 +479,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    position: sticky;
-    top: 49px;
     background: inherit;
     z-index: 10;
+    flex-shrink: 0;
   }
 
   .column-title {
@@ -535,7 +539,6 @@
     cursor: grab;
     position: relative;
     transition: box-shadow 0.1s;
-    width: 100%;
     max-width: 280px;
     min-width: 180px;
     flex: 1 1 220px;
@@ -684,34 +687,40 @@
     font-weight: bold;
   }
 
-  /* ── INSERT LINE ── */
-  .insert-line {
+  /* ── CARD INSERT BUTTON ── */
+  .card-insert-below {
+    position: absolute;
+    bottom: -11px;
+    left: 0;
+    right: 0;
+    height: 18px;
     display: flex;
     align-items: center;
-    gap: 0;
-    padding: 4px 0;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.1s;
-    height: 0;
-    overflow: visible;
-    position: relative;
     justify-content: center;
-    margin: -3px 0;
+    opacity: 0;
+    cursor: pointer;
     z-index: 5;
-    width: 100%;
-    flex-basis: 100%;
+    transition: opacity 0.1s;
   }
 
-  .insert-line::before,
-  .insert-line::after {
+  .card:hover .card-insert-below {
+    opacity: 1;
+  }
+
+  .card-insert-below::before,
+  .card-insert-below::after {
     content: '';
     flex: 1;
     height: 0;
     border-top: 1.5px dashed var(--gray-300);
   }
 
-  .insert-line-btn {
+  .card:hover .card-insert-below::before,
+  .card:hover .card-insert-below::after {
+    border-top-color: var(--black);
+  }
+
+  .card-insert-below span {
     font-size: 11px;
     color: var(--gray-400);
     padding: 0 6px;
@@ -719,24 +728,13 @@
     line-height: 1;
   }
 
-  .insert-line:hover,
-  .insert-line.visible {
-    opacity: 1;
-    height: auto;
-    padding: 6px 0;
-    margin: 0;
-  }
-
-  .insert-line:hover::before,
-  .insert-line:hover::after,
-  .insert-line.visible::before,
-  .insert-line.visible::after {
-    border-top-color: var(--black);
-  }
-
-  .insert-line:hover .insert-line-btn,
-  .insert-line.visible .insert-line-btn {
+  .card:hover .card-insert-below span {
     color: var(--black);
+  }
+
+  .add-card-inline {
+    flex-basis: 100%;
+    width: 100%;
   }
 
   .add-card-inline-actions {
@@ -1290,7 +1288,7 @@
     }
 
     .board {
-      min-height: calc(100vh - 60px);
+      flex: 1;
     }
 
     .column {
@@ -2171,6 +2169,13 @@
         </div>
       </div>
       <div class="modal-section">
+        <div class="modal-section-label">Display</div>
+        <label class="countdown-toggle">
+          <input type="checkbox" id="showLogoToggle" />
+          Show Monoline logo in top bar
+        </label>
+      </div>
+      <div class="modal-section">
         <button class="btn btn-sm" onclick="closeBoardSettings();openArchive()">View Archived Cards <span id="archiveCount" style="color:var(--gray-400)"></span></button>
       </div>
     </div>
@@ -2770,6 +2775,7 @@ function clearFilters() {
 // ── RENDER ──
 
 function render() {
+  document.querySelector('.logo').classList.toggle('hidden', data.showLogo === false);
   renderBoardSelector();
   renderBoard();
   renderCountdown();
@@ -2977,12 +2983,8 @@ function renderColumn(col, board) {
   };
 
   col.cards.forEach((card, i) => {
-    // Insert line before each card
-    body.appendChild(createInsertLine(col, i));
-    body.appendChild(renderCard(card, col, board));
+    body.appendChild(renderCard(card, col, board, i));
   });
-  // Insert line after last card
-  body.appendChild(createInsertLine(col, col.cards.length));
 
   // Add card button at bottom (appears on column hover)
   const addBtn = document.createElement('button');
@@ -3010,7 +3012,7 @@ function renderColumn(col, board) {
   return div;
 }
 
-function renderCard(card, col, board) {
+function renderCard(card, col, board, index) {
   const div = document.createElement('div');
   div.className = 'card';
   div.draggable = true;
@@ -3119,6 +3121,20 @@ function renderCard(card, col, board) {
   meta.appendChild(indicators);
   div.appendChild(meta);
 
+  // Insert-below button (appears on card hover)
+  if (index !== undefined) {
+    const insertBtn = document.createElement('div');
+    insertBtn.className = 'card-insert-below';
+    insertBtn.innerHTML = '<span>+</span>';
+    insertBtn.onclick = (e) => {
+      e.stopPropagation();
+      const body = div.closest('.column-body');
+      const addBtn = div.closest('.column').querySelector('.add-card-btn');
+      showInlineAdd(body, col, addBtn, index + 1);
+    };
+    div.appendChild(insertBtn);
+  }
+
   return div;
 }
 
@@ -3161,20 +3177,7 @@ function handleDrop(cardId, fromColId, toColId, bodyEl) {
 
 // ── INLINE ADD CARD ──
 
-function createInsertLine(col, index) {
-  const line = document.createElement('div');
-  line.className = 'insert-line';
-  line.innerHTML = '<span class="insert-line-btn">+</span>';
-  line.onclick = (e) => {
-    e.stopPropagation();
-    const body = line.closest('.column-body');
-    const addBtn = line.closest('.column').querySelector('.add-card-btn');
-    showInlineAdd(body, col, addBtn, index, line);
-  };
-  return line;
-}
-
-function showInlineAdd(body, col, addBtn, index, insertLine) {
+function showInlineAdd(body, col, addBtn, index) {
   if (body.querySelector('.add-card-inline')) return;
 
   if (addBtn) addBtn.style.display = 'none';
@@ -3220,8 +3223,10 @@ function showInlineAdd(body, col, addBtn, index, insertLine) {
   form.appendChild(input);
   form.appendChild(actions);
 
-  if (insertLine) {
-    insertLine.replaceWith(form);
+  // Insert form at the right position among cards
+  const cardEls = [...body.querySelectorAll('.card')];
+  if (index < cardEls.length) {
+    body.insertBefore(form, cardEls[index]);
   } else {
     body.appendChild(form);
   }
@@ -4184,15 +4189,18 @@ document.addEventListener('paste', (e) => {
     return;
   }
 
-  // Don't intercept text if user is pasting into an input/textarea
+  const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+  if (!text) return;
+
   const active = document.activeElement;
   const tag = active?.tagName?.toLowerCase();
-  if (tag === 'input' || tag === 'textarea') return;
+  const isInField = tag === 'input' || tag === 'textarea';
 
-  const text = (e.clipboardData || window.clipboardData).getData('text').trim();
   if (isUrl(text)) {
     e.preventDefault();
     addLinkToCard(text);
+  } else if (!isInField) {
+    document.getElementById('modalNotes').focus();
   }
 });
 
@@ -4295,6 +4303,8 @@ function openBoardSettings() {
   document.getElementById('countdownDate').value = cd.date || '';
   document.getElementById('countdownLabel').value = cd.label || '';
 
+  document.getElementById('showLogoToggle').checked = data.showLogo !== false;
+
   document.getElementById('boardSettingsModal').classList.add('open');
 }
 
@@ -4318,6 +4328,8 @@ function saveBoardSettings() {
     date: document.getElementById('countdownDate').value || null,
     label: document.getElementById('countdownLabel').value.trim() || null,
   };
+
+  data.showLogo = document.getElementById('showLogoToggle').checked;
 
   save();
   closeBoardSettings();
@@ -4663,13 +4675,15 @@ function saveToFirestore() {
 
 function subscribeToFirestore(uid) {
   if (firestoreUnsub) firestoreUnsub();
+  const syncEl = document.getElementById('syncIndicator');
   firestoreUnsub = db.collection('users').doc(uid).onSnapshot(doc => {
     if (!doc.exists) {
       migrateToFirestore();
       return;
     }
     const remote = doc.data();
-    // Skip if modal is open — local references would go stale
+    syncEl.textContent = 'synced';
+    syncEl.classList.add('synced');
     if (editingCardId) return;
     data.boards = remote.boards || [];
     if (!currentBoardId || !data.boards.find(b => b.id === currentBoardId)) {
@@ -4678,6 +4692,9 @@ function subscribeToFirestore(uid) {
     data.currentBoardId = currentBoardId;
     localStorage.setItem('monoline_data', JSON.stringify(data));
     render();
+  }, (err) => {
+    syncEl.textContent = 'offline';
+    syncEl.classList.remove('synced');
   });
 }
 
